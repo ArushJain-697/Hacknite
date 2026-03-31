@@ -7,8 +7,11 @@ export default function FrontPageTerminal() {
 
   useEffect(() => {
     const typed = new Typed(el.current, {
-      strings: ['Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi architecto amet ducimus eum aperiam esse distinctio, dolorum sequi nostrum eius quaerat eveniet earum voluptatum debitis dicta voluptatibus deserunt ipsam. Tenetur!'],
+      strings: ['Welcome to the underworld linkedin ! 😈 ^1000 <br/> Are you a new user or a returning goon?<br/> ^500','Type :  Login/Sign Up'],
       typeSpeed: 50,
+      backSpeed:1,
+      smartBackspace:false,
+      contentType:'html',
     });
     return () => {
       // Destroy Typed instance during cleanup to stop animation
