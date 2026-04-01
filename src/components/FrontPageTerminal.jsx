@@ -14,6 +14,7 @@ export default function FrontPageTerminal() {
       contentType:'html',
       onComplete:(self)=>{
         self.cursor.style.display="none";
+        
       }
     });
     return () => {
