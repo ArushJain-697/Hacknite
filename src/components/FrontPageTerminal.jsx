@@ -25,7 +25,7 @@ export default function FrontPageTerminal() {
 
     typedInstance.current = new Typed(el.current, {
       strings: strings,
-      typeSpeed: 50,
+      typeSpeed: 30,
       showCursor: false, // Keep this false since you have a manual one
       contentType: "html",
       onComplete: (self) => {
@@ -64,7 +64,12 @@ const handleKeyDown = (e) => {
         setUserInput("");
         setCurrentStep("ID");
         startTypedAnimation(['<br/>ACCESSING DATABASE... ^500 <br/>ENTER GOON ID: ']);
-      } else {
+      } else if(input.toLowerCase()==="sign up"){
+        setTerminalHistory(prev => [...prev, `Type : Login/Sign Up : ${input}`]);
+        setUserInput("");
+        setCurrentStep("ID_signup");
+        startTypedAnimation(['<br/>WELCOME !... ^500 <br/>ENTER GOON ID: ']);
+      }else {
         startTypedAnimation(['<br/>INVALID COMMAND. ^300 <br/>Type "Login" or "Sign Up": ']);
         setUserInput("");
       }
@@ -87,6 +92,22 @@ const handleKeyDown = (e) => {
       
       // Here you would call your handleLogin(loginData.id, input) function
       startTypedAnimation(['<br/>VERIFYING... ^1000 <br/>ACCESS GRANTED. Welcome, ' + loginData.id]);
+    }
+    else if (currentStep === "ID_signup") {
+      setTerminalHistory(prev => [...prev, `ENTER GOON ID: ${input}`]);
+      setLoginData(prev => ({ ...prev, id: input }));
+      setUserInput("");
+      setCurrentStep("PASS_signup");
+      startTypedAnimation(['<br/>ENCRYPTING CHANNEL... ^500 <br/>ENTER PASSWORD: ']);
+    }
+    else if (currentStep === "PASS_signup") {
+      // Final Step: Password entered
+      setTerminalHistory(prev => [...prev, `ENTER PASSWORD: ********`]);
+      setLoginData(prev => ({ ...prev, pass: input }));
+      setUserInput("");
+      
+      // Here you would call your handleLogin(loginData.id, input) function
+      startTypedAnimation(['<br/>Storing in database ^1000 <br/>Welcome , ' + loginData.id]);
     }
   }
 };
