@@ -1,10 +1,29 @@
-@import 'tailwindcss';
-.newspaperTitle{
-    font-family: Sancreek;
+@import "tailwindcss";
+.newspaperTitle {
+  font-family: Sancreek;
 }
-.newsContent{
-    font-family: 'Noticia Text';
+.newsContent {
+  font-family: "Noticia Text";
 }
-.vignette{
-    box-shadow: 0 0 10em 4em #000000 inset;
+.vignette {
+  box-shadow: 0 0 10em 4em #000000 inset;
+    /* animation: shakeLight 2s infinite alternate; */
+    overflow: hidden;
+}
+@keyframes shakeLight {
+  0% {
+    transform: translate(-1em,1em);
+  }
+  25% {
+    transform:translate(1em,1em);
+}
+50% {
+      transform:translate(1em,-1em);
+    }
+    75% {
+      transform:translate(-1em,-1em);
+    }
+    100% {
+      transform:translate(-1em,1em);
+  }
 }
