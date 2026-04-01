@@ -51,32 +51,45 @@ export default function FrontPageTerminal() {
     };
   }, []);
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const command = userInput.trim().toLowerCase();
+  const [loginData, setLoginData] = useState({ id: '', pass: '' });
 
-      // Save the line to history
-      setTerminalHistory((prev) => [
-        ...prev,
-        `Type : Login/Sign Up : ${userInput}`,
-      ]);
-      setUserInput("");
-
-      if (currentStep === "COMMAND") {
-        if (command === "login") {
-          setCurrentStep("ID");
-          startTypedAnimation([
-            "<br/>ACCESSING DATABASE... ^500 <br/>ENTER GOON ID: ",
-          ]);
-        } else {
-          startTypedAnimation([
-            '<br/>INVALID COMMAND. ^300 <br/>Type "Login" or "Sign Up": ',
-          ]);
-        }
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const input = userInput.trim(); // Don't lowercase yet, IDs might be case-sensitive
+    
+    if (currentStep === "COMMAND") {
+      if (input.toLowerCase() === "login") {
+        setTerminalHistory(prev => [...prev, `Type : Login/Sign Up : ${input}`]);
+        setUserInput("");
+        setCurrentStep("ID");
+        startTypedAnimation(['<br/>ACCESSING DATABASE... ^500 <br/>ENTER GOON ID: ']);
+      } else {
+        startTypedAnimation(['<br/>INVALID COMMAND. ^300 <br/>Type "Login" or "Sign Up": ']);
+        setUserInput("");
       }
+    } 
+    
+    else if (currentStep === "ID") {
+      // Save ID and move to Password
+      setTerminalHistory(prev => [...prev, `ENTER GOON ID: ${input}`]);
+      setLoginData(prev => ({ ...prev, id: input }));
+      setUserInput("");
+      setCurrentStep("PASS");
+      startTypedAnimation(['<br/>ENCRYPTING CHANNEL... ^500 <br/>ENTER PASSWORD: ']);
+    } 
+    
+    else if (currentStep === "PASS") {
+      // Final Step: Password entered
+      setTerminalHistory(prev => [...prev, `ENTER PASSWORD: ********`]);
+      setLoginData(prev => ({ ...prev, pass: input }));
+      setUserInput("");
+      
+      // Here you would call your handleLogin(loginData.id, input) function
+      startTypedAnimation(['<br/>VERIFYING... ^1000 <br/>ACCESS GRANTED. Welcome, ' + loginData.id]);
     }
-  };
+  }
+};
 
   return (
     <div
