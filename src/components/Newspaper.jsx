@@ -86,6 +86,8 @@ export default function Newspaper() {
           </h1>
           <MyBook/>
         </div> */}
+        <img src="/assets/wanted.jpeg" alt="wanted image" className="absolute right-30 top-10 rotate-45 max-w-30 p-1 hover:border-2 border-amber-300 hover:scale-110s box-content select-none " />
+      <div className="vignette z-10 absolute w-full h-full bg-transparent pointer-events-none"></div>
       </div>
     </>
   );
