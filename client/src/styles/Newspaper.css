@@ -25,3 +25,7 @@
       transform:translate(-2em,-2em);
   }
 }
+.demoPage {
+  backface-visibility: hidden; /* Prevents flickering during flips */
+  transform-style: preserve-3d;
+}

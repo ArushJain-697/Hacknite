@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import Typed from "typed.js";
 import "../styles/FrontPageTerminal.css";
 import { useNavigate } from "react-router-dom";
-const navigate=useNavigate();
-
+import CinematicPage from "../components/CinematicPage";
 export default function FrontPageTerminal() {
+  const navigate = useNavigate();
   const el = useRef(null);
   const textAreaRef = useRef(null);
 
@@ -17,7 +17,7 @@ export default function FrontPageTerminal() {
   const [currentStep, setCurrentStep] = useState("COMMAND");
 
   // 2. Wrap the animation logic to handle cleanup
-  const startTypedAnimation = (strings) => {
+  const startTypedAnimation = (strings, callback = null) => {
     // Kill any existing animation before starting a new one
     if (typedInstance.current) {
       typedInstance.current.destroy();
@@ -32,6 +32,9 @@ export default function FrontPageTerminal() {
       contentType: "html",
       onComplete: (self) => {
         setIsTypingDone(true);
+        if (callback) {
+          callback();
+        }
         // Ensure focus after animation finishes
         setTimeout(() => textAreaRef.current?.focus(), 10);
       },
@@ -41,7 +44,7 @@ export default function FrontPageTerminal() {
   // Initial Boot
   useEffect(() => {
     startTypedAnimation([
-      "Welcome to the underworld linkedin !  ^1000 <br/> Are you a new user or a returning goon?<br/> ^500",
+      // "Welcome to the underworld linkedin !  ^1000 <br/> Are you a new user or a returning goon?<br/> ^500",
       "> Type :  Login/Sign Up : ",
     ]);
 
@@ -89,20 +92,20 @@ export default function FrontPageTerminal() {
         }
       } else if (currentStep === "ID") {
         // Save ID and move to Password
-          setTerminalHistory((prev) => [...prev, `> ENTER GOON ID: ${input}`]);
-          setLoginData((prev) => ({ ...prev, username: input }));
-          setUserInput("");
-          getUsers().then((users)=>{
-            const user = users.find(
-              (u) => u.username == input,
-            );
-            if(!user){
-              startTypedAnimation(["<br/>NO SUCH USER EXISTS ^500 <br/>>",]);
-            }else{
-              setCurrentStep("PASS");
-            }
-          })
-          startTypedAnimation(["<br/>ENCRYPTING CHANNEL... ^500 <br/>> ENTER PASSWORD: ",]);
+        setTerminalHistory((prev) => [...prev, `> ENTER GOON ID: ${input}`]);
+        setLoginData((prev) => ({ ...prev, username: input }));
+        setUserInput("");
+        getUsers().then((users) => {
+          const user = users.find((u) => u.username == input);
+          if (!user) {
+            startTypedAnimation(["<br/>NO SUCH USER EXISTS ^500 <br/>>"]);
+          } else {
+            setCurrentStep("PASS");
+          }
+        });
+        startTypedAnimation([
+          "<br/>ENCRYPTING CHANNEL... ^500 <br/>> ENTER PASSWORD: ",
+        ]);
       } else if (currentStep === "PASS") {
         /*
     const url = 'http://localhost:8080/api/register'; 
@@ -156,9 +159,15 @@ fetch(url)
             if (user) {
               console.log(user);
               if (user.password == input) {
-                startTypedAnimation([
-                  "<br/>ACCESS GRANTED. Welcome, ^500" + loginData.username,
-                ]);
+                startTypedAnimation(
+                  [
+                    "<br/>ACCESS GRANTED. Welcome, ^500" + loginData.username,
+                    "^200",
+                  ],
+                  () => {
+                    navigate("/feed");
+                  },
+                );
               } else {
                 startTypedAnimation([
                   "<br/>INVALID PASSWORD, TRY AGAIN . . . ^500" +
@@ -175,25 +184,20 @@ fetch(url)
           });
       } else if (currentStep === "ID_signup") {
         setTerminalHistory((prev) => [...prev, `> ENTER GOON ID: ${input}`]);
-        getUsers().then((users)=>{
-            const user = users.find(
-              (u) => u.username == input,
-            );
-            if(!user){
-              setLoginData((prev) => ({ ...prev, username: input }));
-              setCurrentStep("PASS_signup");
-              setCurrentStep("PASS");
-              setUserInput("");
-              startTypedAnimation([
-                "<br/>ENCRYPTING CHANNEL... ^500 <br/>> ENTER PASSWORD: ",
-              ]);
-            }else{
-              startTypedAnimation([
-                "<br/>USERNAME ALREADY IN USE ! ^500 ",
-              ]);
-              
-            }
-          })
+        getUsers().then((users) => {
+          const user = users.find((u) => u.username == input);
+          if (!user) {
+            setLoginData((prev) => ({ ...prev, username: input }));
+            setCurrentStep("PASS_signup");
+            // setCurrentStep("PASS");
+            setUserInput("");
+            startTypedAnimation([
+              "<br/>ENCRYPTING CHANNEL... ^500 <br/>> ENTER PASSWORD: ",
+            ]);
+          } else {
+            startTypedAnimation(["<br/>USERNAME ALREADY IN USE ! ^500 "]);
+          }
+        });
       } else if (currentStep === "PASS_signup") {
         // Final Step: Password entered
         setTerminalHistory((prev) => [...prev, `> ENTER PASSWORD: ********`]);
@@ -255,36 +259,38 @@ fetch(url)
   }
 
   return (
-    <div
-      onClick={() => textAreaRef.current?.focus()}
-      className="terminalParent relative text-2xl font-bold tracking-wider leading-10 p-6 text-[#00FF41] font-mono before:content-[''] before:bg-[url('/assets/grain.gif')] before:z-10 before:w-screen before:h-screen before:block before:absolute before:opacity-7 before: bg-black h-screen overflow-hidden before:left-0 before:top-0 "
-    >
-      <div className="terminal-content">
-        {terminalHistory.map((line, i) => (
-          <div key={i} dangerouslySetInnerHTML={{ __html: line }} />
-        ))}
+    <CinematicPage>
+      <div
+        onClick={() => textAreaRef.current?.focus()}
+        className="terminalParent relative text-2xl font-bold tracking-wider leading-10 p-6 text-[#00FF41] font-mono before:content-[''] before:bg-[url('/assets/grain.gif')] before:z-10 before:w-screen before:h-screen before:block before:absolute before:opacity-7 before: bg-black h-screen overflow-hidden before:left-0 before:top-0 "
+      >
+        <div className="terminal-content">
+          {terminalHistory.map((line, i) => (
+            <div key={i} dangerouslySetInnerHTML={{ __html: line }} />
+          ))}
 
-        {/* The target for Typed.js */}
-        <span ref={el} />
+          {/* The target for Typed.js */}
+          <span ref={el} />
 
-        {/* Manual Cursor: Only shows when Typed.js is NOT typing */}
-        {isTypingDone && (
-          <span className="text-[#00FF41]">
-            {userInput}
-            <span className="terminal-cursor text-transparent">█</span>
-          </span>
-        )}
+          {/* Manual Cursor: Only shows when Typed.js is NOT typing */}
+          {isTypingDone && (
+            <span className="text-[#00FF41]">
+              {userInput}
+              <span className="terminal-cursor text-transparent">█</span>
+            </span>
+          )}
+        </div>
+
+        <textarea
+          ref={textAreaRef}
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="absolute opacity-0 p-0 m-0 w-0 h-0 pointer-events-none"
+        />
+
+        <div className="scanlines absolute inset-0 pointer-events-none opacity-40"></div>
       </div>
-
-      <textarea
-        ref={textAreaRef}
-        value={userInput}
-        onChange={(e) => setUserInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        className="absolute opacity-0 p-0 m-0 w-0 h-0 pointer-events-none"
-      />
-
-      <div className="scanlines absolute inset-0 pointer-events-none opacity-40"></div>
-    </div>
+    </CinematicPage>
   );
 }

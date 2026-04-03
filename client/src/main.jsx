@@ -1,20 +1,13 @@
-import React,{ StrictMode } from "react";
+import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-//import pages :
-import FrontPageTerminal from "./pages/FrontPageTerminal";
-import Newspaper from "./pages/Newspaper";
-
+import './styles/global.css'
+import App from "./App";
+import { BrowserRouter } from "react-router-dom";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    {/* <FrontPageTerminal /> */}
-    {/* <Newspaper /> */}
-    <Router>
-      <Routes>
-        <Route path="/" element={<FrontPageTerminal />} />
-        <Route path="/feed" element={<Newspaper />} />
-      </Routes>
-    </Router>
+    <BrowserRouter>
+    <App />
+    </BrowserRouter>
   </StrictMode>,
 );
 
