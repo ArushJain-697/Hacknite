@@ -33,7 +33,7 @@ export default function FrontPageTerminal() {
       strings: strings,
       typeSpeed: 30,
       showCursor: true, // Keep this false since you have a manual one
-      cursorChar: '█',
+      cursorChar: "█",
       contentType: "html",
       preStringTyped: (arrayPos, self) => {
         self.cursor.style.display = "inline-block";
@@ -88,9 +88,7 @@ export default function FrontPageTerminal() {
           ]);
           setUserInput("");
           setCurrentStep("COMMAND");
-          startTypedAnimation([
-            "<br/>> Type : Login/Sign Up : ",
-          ]);
+          startTypedAnimation(["<br/>> Type : Login/Sign Up : "]);
           setIsProcessingInput(false);
         } else {
           startTypedAnimation([
@@ -130,102 +128,33 @@ export default function FrontPageTerminal() {
           setIsProcessingInput(false);
         }
       } else if (currentStep === "ID") {
-        // Save ID and move to Password
+        // Login Flow: Save ID and move to Password
         setTerminalHistory((prev) => [...prev, `> ENTER GOON ID: ${input}`]);
         setLoginData((prev) => ({ ...prev, username: input }));
         setUserInput("");
-        getUsers().then((users) => {
-          if (!Array.isArray(users)) {
-            startTypedAnimation(["<br/>SERVER DOWN :( ^800"]);
-            setIsProcessingInput(false);
-            return;
-          }
-          const user = users.find((u) => u.username == input);
-          if (!user) {
-            setCurrentStep("PROMPT_SIGNUP_YN");
-            startTypedAnimation(["<br/>NO SUCH USER EXISTS. WOULD YOU LIKE TO SIGN UP? (Y/N): "]);
-            setIsProcessingInput(false);
-          } else {
-            setCurrentStep("PASS");
-            startTypedAnimation([
-              "<br/>ENCRYPTING CHANNEL... ^500 <br/>> ENTER PASSWORD: ",
-            ]);
-            setIsProcessingInput(false);
-          }
-        });
-      } else if (currentStep === "PROMPT_SIGNUP_YN") {
-        setTerminalHistory((prev) => [...prev, `> WOULD YOU LIKE TO SIGN UP? (Y/N): ${input}`]);
-        setUserInput("");
-        const ynInput = input.toLowerCase();
-        if (ynInput === "y" || ynInput === "yes") {
-          setCurrentStep("PASS_signup");
-          startTypedAnimation([
-            "<br/>PROCEEDING TO SIGN UP... ^500 <br/>> ENTER PASSWORD: ",
-          ]);
-          setIsProcessingInput(false);
-        } else if (ynInput === "n" || ynInput === "no") {
-          setCurrentStep("COMMAND");
-          startTypedAnimation([
-            "<br/>> Type : Login/Sign Up : ",
-          ]);
-          setIsProcessingInput(false);
-        } else {
-          startTypedAnimation([
-            "<br/>INVALID INPUT. ^300 <br/>> TYPE Y or N: ",
-          ]);
-          setIsProcessingInput(false);
-        }
+        setCurrentStep("PASS");
+        startTypedAnimation([
+          "<br/>ENCRYPTING CHANNEL... ^500 <br/>> ENTER PASSWORD: ",
+        ]);
+        setIsProcessingInput(false);
       } else if (currentStep === "PASS") {
-        /*
-    const url = 'http://localhost:8080/api/register'; 
-
-fetch(url, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  // This is the data he is sending to your backend
-  body: JSON.stringify({
-    username: "test_user_1",
-    password: "password123"
-  })
-})
-.then(response => response.json())
-.then(data => {
-  console.log("Success! Backend says:", data);
-})
-.catch(error => console.error("Error:", error));
-    
-    */
-
-        /*
-const url = 'http://localhost:8080/api/users';
-
-fetch(url)
-  .then(response => response.json())
-  .then(usersList => {
-    console.log("All registered users:", usersList);
-  })
-  .catch(error => console.error("Error fetching users:", error));
-
-*/
-        // Final Step: Password entered
+        // Login Flow: Password entered, call the API
         setTerminalHistory((prev) => [...prev, `> ENTER PASSWORD: ********`]);
-        console.log(input);
-        setLoginData((prev) => ({ ...prev, pass: input }));
+        const password = input;
         setUserInput("");
+        setIsProcessingInput(true);
 
-        // Here you would call your handleLogin(loginData.username, input) function
-        startTypedAnimation(["<br/>VERIFYING... ^800 " + loginData.username]);
+        startTypedAnimation(["<br/>VERIFYING... ^800 "]);
         fetch(`${apiBaseUrl}/api/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-edge":"665455db9da6a53d0a3637a9fd9118a1cda2de88972ab3a78934a34490536636"
           },
           credentials: "include", // REQUIRES COOKIES
           body: JSON.stringify({
             username: loginData.username,
-            password: input,
+            password: password,
           }),
         })
           .then(async (response) => {
@@ -236,119 +165,86 @@ fetch(url)
             return data;
           })
           .then((data) => {
-            if (data?.token) {
-              localStorage.setItem("authToken", data.token);
-            }
+            // SUCCESS! The cookie is now set by the browser.
             startTypedAnimation(
-              ["<br/>ACCESS GRANTED. Welcome, ^500" + loginData.username, "^200"],
-              () => {
-                navigate("/feed");
-              },
+              [`<br/>ACCESS GRANTED. Welcome, ^500${data.user.username}`],
+              () => navigate("/feed"),
             );
           })
           .catch((error) => {
             console.error("Login error:", error);
+            // Show the actual error from the server
             startTypedAnimation([
-              "<br/>INVALID CREDENTIALS, TRY AGAIN . . . ^500" + loginData.username,
+              `<br/>LOGIN FAILED: ${error.message}. ^800 <br/>> Type "Login" or "Sign Up": `,
             ]);
-          })
-          .finally(() => {
+            setCurrentStep("COMMAND"); // Go back to the command prompt
             setIsProcessingInput(false);
           });
       } else if (currentStep === "ID_signup") {
+        // Sign Up Flow: Save ID and move to Password
         setTerminalHistory((prev) => [...prev, `> ENTER GOON ID: ${input}`]);
-        startTypedAnimation(["<br/>Please wait, connecting to database . . ."],()=>{
-          getUsers().then((users) => {
-            if (!Array.isArray(users)) {
-            startTypedAnimation(["<br/>SERVER DOWN :( ^800"]);
-            setIsProcessingInput(false);
-            return;
-          }
-          const user = users.find((u) => u.username == input);
-          if (!user) {
-            setLoginData((prev) => ({ ...prev, username: input }));
-            setCurrentStep("PASS_signup");
-            // setCurrentStep("PASS");
-            setUserInput("");
-            startTypedAnimation([
-              "<br/>ENCRYPTING CHANNEL... ^500 <br/>> ENTER PASSWORD: ",
-            ]);
-            setIsProcessingInput(false);
-          } else {
-            startTypedAnimation(["<br/>USERNAME ALREADY IN USE ! ^500 "]);
-            setIsProcessingInput(false);
-          }
-        });
-      });
-      } else if (currentStep === "PASS_signup") {
-        // Final Step: Password entered
-        setTerminalHistory((prev) => [...prev, `> ENTER PASSWORD: ********`]);
-        setLoginData((prev) => ({ ...prev, pass: input }));
+        setLoginData({ username: input, pass: "" }); // Set new username
         setUserInput("");
+        setCurrentStep("PASS_signup");
         startTypedAnimation([
-          "<br/>Storing in database ^800 " + loginData.username,
+          "<br/>ENCRYPTING CHANNEL... ^500 <br/>> ENTER PASSWORD: ",
         ]);
-        console.log(loginData);
-        const url = `${apiBaseUrl}/api/register`;
-        fetch(url, {
+        setIsProcessingInput(false);
+      } else if (currentStep === "PASS_signup") {
+        // Sign Up Flow: Password entered, call the API
+        setTerminalHistory((prev) => [...prev, `> ENTER PASSWORD: ********`]);
+        const password = input;
+        setUserInput("");
+        setIsProcessingInput(true);
+
+        startTypedAnimation(["<br/>CREATING IDENTITY... ^800 "]);
+
+        fetch(`${apiBaseUrl}/api/register`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-edge":"665455db9da6a53d0a3637a9fd9118a1cda2de88972ab3a78934a34490536636"
+
           },
           credentials: "include", // REQUIRES COOKIES
           // This is the data he is sending to your backend
           body: JSON.stringify({
             username: loginData.username,
-            password: input,
+            password: password,
           }),
         })
-          .then((response) => response.json())
+          .then(async (response) => {
+            const data = await response.json();
+            if (!response.ok) {
+              // This will catch "Username already in use"
+              throw new Error(
+                data?.message || `Registration failed: ${response.status}`,
+              );
+            }
+            return data;
+          })
           .then((data) => {
-            console.log("Success! Backend says:", data);
-            finished();
+            // SUCCESS! The cookie is set, and we can log the user in.
+            startTypedAnimation(
+              [
+                `<br/>REGISTRATION COMPLETE. Welcome, ^500${data.user.username}`,
+              ],
+              () => navigate("/feed"),
+            );
           })
           .catch((error) => {
-            console.error("Error:", error);
+            console.error("Registration error:", error);
             startTypedAnimation([
-              "<br/>Server Down :(^800 " + loginData.username,
+              `<br/>REGISTRATION FAILED: ${error.message}. ^800 <br/>> Type "Login" or "Sign Up": `,
             ]);
-          })
-          .finally(() => {
+            setCurrentStep("COMMAND");
             setIsProcessingInput(false);
           });
-        // Here you would call your handleLogin(loginData.username, input) function
       } else {
         setIsProcessingInput(false);
       }
     }
   };
-  function finished() {
-    startTypedAnimation(["<br/> ^800 Welcome  " + loginData.username], () => {
-      navigate("/feed");
-    });
-    //redirecting
-  }
-
-  const url = `${apiBaseUrl}/api/users`;
-
-  async function getUsers() {
-    try {
-      const response = await fetch(url, {
-        credentials: "include" // NEEDED FOR PROTECTED GET ROUTES
-      });
-
-      // Check if the server returned an error (like 404 or 500)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const usersList = await response.json();
-      console.log("All registered users:", usersList);
-      return usersList; // Return the data so you can use it elsewhere
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  }
 
   return (
     <CinematicPage>

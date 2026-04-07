@@ -10,6 +10,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || "https://sicari.works",
   "https://sicari.works",
   "https://www.sicari.works",
+  "http://localhost:5173"
 ].filter(Boolean);
 
 app.use(
