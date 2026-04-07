@@ -17,7 +17,7 @@ export default function FrontPageTerminal() {
   const [userInput, setUserInput] = useState("");
   const [isTypingDone, setIsTypingDone] = useState(false);
   const [terminalHistory, setTerminalHistory] = useState([]);
-  const [currentStep, setCurrentStep] = useState("COMMAND");
+  const [currentStep, setCurrentStep] = useState("ROLE");
   const [isProcessingInput, setIsProcessingInput] = useState(false);
 
   // 2. Wrap the animation logic to handle cleanup
@@ -53,8 +53,8 @@ export default function FrontPageTerminal() {
   // Initial Boot
   useEffect(() => {
     startTypedAnimation([
-      "Welcome to the underworld linkedin !  ^1000 <br/> Are you a new user or a returning goon?<br/> ^500",
-      "> Type :  Login/Sign Up : ",
+      "Welcome to the underworld linkedin !  ^1000 <br/> Are you a goon or a master?<br/> ^500",
+      "> Type :  Goon/Master : ",
     ]);
 
     // Cleanup on component unmount
@@ -79,7 +79,27 @@ export default function FrontPageTerminal() {
       }
       setIsProcessingInput(true);
 
-      if (currentStep === "COMMAND") {
+      if (currentStep === "ROLE") {
+        const roleInput = input.toLowerCase();
+        if (roleInput === "goon" || roleInput === "master") {
+          setTerminalHistory((prev) => [
+            ...prev,
+            `> Type :  Goon/Master : ${input}`,
+          ]);
+          setUserInput("");
+          setCurrentStep("COMMAND");
+          startTypedAnimation([
+            "<br/>> Type : Login/Sign Up : ",
+          ]);
+          setIsProcessingInput(false);
+        } else {
+          startTypedAnimation([
+            '<br/>INVALID ROLE. ^300 <br/>> Type "Goon" or "Master": ',
+          ]);
+          setUserInput("");
+          setIsProcessingInput(false);
+        }
+      } else if (currentStep === "COMMAND") {
         if (input.toLowerCase() === "login") {
           setTerminalHistory((prev) => [
             ...prev,
@@ -122,7 +142,8 @@ export default function FrontPageTerminal() {
           }
           const user = users.find((u) => u.username == input);
           if (!user) {
-            startTypedAnimation(["<br/>NO SUCH USER EXISTS ^500 <br/>>"]);
+            setCurrentStep("PROMPT_SIGNUP_YN");
+            startTypedAnimation(["<br/>NO SUCH USER EXISTS. WOULD YOU LIKE TO SIGN UP? (Y/N): "]);
             setIsProcessingInput(false);
           } else {
             setCurrentStep("PASS");
@@ -132,6 +153,28 @@ export default function FrontPageTerminal() {
             setIsProcessingInput(false);
           }
         });
+      } else if (currentStep === "PROMPT_SIGNUP_YN") {
+        setTerminalHistory((prev) => [...prev, `> WOULD YOU LIKE TO SIGN UP? (Y/N): ${input}`]);
+        setUserInput("");
+        const ynInput = input.toLowerCase();
+        if (ynInput === "y" || ynInput === "yes") {
+          setCurrentStep("PASS_signup");
+          startTypedAnimation([
+            "<br/>PROCEEDING TO SIGN UP... ^500 <br/>> ENTER PASSWORD: ",
+          ]);
+          setIsProcessingInput(false);
+        } else if (ynInput === "n" || ynInput === "no") {
+          setCurrentStep("COMMAND");
+          startTypedAnimation([
+            "<br/>> Type : Login/Sign Up : ",
+          ]);
+          setIsProcessingInput(false);
+        } else {
+          startTypedAnimation([
+            "<br/>INVALID INPUT. ^300 <br/>> TYPE Y or N: ",
+          ]);
+          setIsProcessingInput(false);
+        }
       } else if (currentStep === "PASS") {
         /*
     const url = 'http://localhost:8080/api/register'; 
