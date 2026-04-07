@@ -213,8 +213,9 @@ fetch(url)
           });
       } else if (currentStep === "ID_signup") {
         setTerminalHistory((prev) => [...prev, `> ENTER GOON ID: ${input}`]);
-        getUsers().then((users) => {
-          if (!Array.isArray(users)) {
+        startTypedAnimation(["<br/>Please wait, connecting to database . . ."],()=>{
+          getUsers().then((users) => {
+            if (!Array.isArray(users)) {
             startTypedAnimation(["<br/>SERVER DOWN :( ^800"]);
             setIsProcessingInput(false);
             return;
@@ -234,6 +235,7 @@ fetch(url)
             setIsProcessingInput(false);
           }
         });
+      });
       } else if (currentStep === "PASS_signup") {
         // Final Step: Password entered
         setTerminalHistory((prev) => [...prev, `> ENTER PASSWORD: ********`]);
