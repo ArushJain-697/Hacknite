@@ -35,6 +35,30 @@ app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 
+// ==========================================
+// 🛡️ THE SYNDICATE EDGE GUARD
+// ==========================================
+app.use((req, res, next) => {
+  // Ignore during local development so you can test easily
+  if (process.env.NODE_ENV !== "production") {
+    return next();
+  }
+
+  // Verify the Secret Handshake from Cloudflare
+  const incomingToken = req.headers['x-edge'];
+  const expectedToken = process.env.EDGE_SECRET;
+
+  if (!incomingToken || incomingToken !== expectedToken) {
+    console.warn(`DIRECT IP ATTACK BLOCKED from IP: ${req.ip}`);
+    return res.status(403).json({ 
+      error: "Access Denied. Invalid Edge Signature." 
+    });
+  }
+
+  next(); // Handshake accepted, proceed to the routes
+});
+// ==========================================
+
 app.get("/api", (_req, res) => {
   res.json({ message: "Hello from the backend!" });
 });
