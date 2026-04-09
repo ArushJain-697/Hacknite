@@ -6,6 +6,7 @@ const crypto = require("crypto");
 
 // 1. Modular Route Imports
 const authRoutes = require("./routes/authRoutes");
+const postRoutes = require("./routes/postRoutes");
 // const heistRoutes = require("./routes/heistRoutes"); // <-- Future route goes here
 
 const app = express();
@@ -71,7 +72,8 @@ app.get("/api", (_req, res) => {
 
 // 2. Central API Router
 const apiRouter = express.Router();
-apiRouter.use("/auth", authRoutes); // Handles /api/auth/*
+apiRouter.use("/auth", authRoutes);
+apiRouter.use("/posts", postRoutes); // Handles /api/auth/*
 // apiRouter.use("/heists", heistRoutes); // Handles /api/heists/*
 
 app.use("/api", apiRouter);
