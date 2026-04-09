@@ -3,6 +3,7 @@ import Typed from "typed.js";
 import "../styles/FrontPageTerminal.css";
 import { useNavigate } from "react-router-dom";
 import CinematicPage from "../components/CinematicPage";
+
 export default function FrontPageTerminal() {
   const navigate = useNavigate();
   const el = useRef(null);
@@ -145,11 +146,12 @@ export default function FrontPageTerminal() {
         setIsProcessingInput(true);
 
         startTypedAnimation(["<br/>VERIFYING... ^800 "]);
-        fetch(`${apiBaseUrl}/api/login`, {
+        
+        // 🔒 FIX 1: Updated URL to include /auth, removed x-edge header
+        fetch(`${apiBaseUrl}/api/auth/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-edge":"665455db9da6a53d0a3637a9fd9118a1cda2de88972ab3a78934a34490536636"
           },
           credentials: "include", // REQUIRES COOKIES
           body: JSON.stringify({
@@ -199,7 +201,8 @@ export default function FrontPageTerminal() {
 
         startTypedAnimation(["<br/>CREATING IDENTITY... ^800 "]);
 
-        fetch(`${apiBaseUrl}/api/register`, {
+        // 🔒 FIX 2: Updated URL to include /auth
+        fetch(`${apiBaseUrl}/api/auth/register`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
