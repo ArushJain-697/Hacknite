@@ -53,8 +53,8 @@ export default function FrontPageTerminal() {
   // Initial Boot
   useEffect(() => {
     startTypedAnimation([
-      "Welcome to the underworld linkedin !  ^1000 <br/> Are you a goon or a master?<br/> ^500",
-      "> Type :  Goon/Master : ",
+      "Welcome to the underworld linkedin !  ^1000 <br/> Are you a Sicario or a Fixer?<br/> ^500",
+      "> Type :  Sicario/Fixer : ",
     ]);
 
     // Cleanup on component unmount
@@ -81,10 +81,10 @@ export default function FrontPageTerminal() {
 
       if (currentStep === "ROLE") {
         const roleInput = input.toLowerCase();
-        if (roleInput === "goon" || roleInput === "master") {
+        if (roleInput === "sicario" || roleInput === "fixer") {
           setTerminalHistory((prev) => [
             ...prev,
-            `> Type :  Goon/Master : ${input}`,
+            `> Type :  sicario/fixer : ${input}`,
           ]);
           setUserInput("");
           setCurrentStep("COMMAND");
@@ -92,7 +92,7 @@ export default function FrontPageTerminal() {
           setIsProcessingInput(false);
         } else {
           startTypedAnimation([
-            '<br/>INVALID ROLE. ^300 <br/>> Type "Goon" or "Master": ',
+            '<br/>INVALID ROLE. ^300 <br/>> Type "Sicario" or "Fixer": ',
           ]);
           setUserInput("");
           setIsProcessingInput(false);
@@ -106,7 +106,7 @@ export default function FrontPageTerminal() {
           setUserInput("");
           setCurrentStep("ID");
           startTypedAnimation([
-            "<br/>>ACCESSING DATABASE... ^500 <br/>> ENTER GOON ID: ",
+            "<br/>>ACCESSING DATABASE... ^500 <br/>> ENTER Sicario ID: ",
           ]);
           setIsProcessingInput(false);
         } else if (input.toLowerCase() === "sign up") {
@@ -117,7 +117,7 @@ export default function FrontPageTerminal() {
           setUserInput("");
           setCurrentStep("ID_signup");
           startTypedAnimation([
-            "<br/>WELCOME !... ^500 <br/>> ENTER GOON ID: ",
+            "<br/>WELCOME !... ^500 <br/>> ENTER Sicario ID: ",
           ]);
           setIsProcessingInput(false);
         } else {
@@ -129,7 +129,7 @@ export default function FrontPageTerminal() {
         }
       } else if (currentStep === "ID") {
         // Login Flow: Save ID and move to Password
-        setTerminalHistory((prev) => [...prev, `> ENTER GOON ID: ${input}`]);
+        setTerminalHistory((prev) => [...prev, `> ENTER Sicario ID: ${input}`]);
         setLoginData((prev) => ({ ...prev, username: input }));
         setUserInput("");
         setCurrentStep("PASS");
@@ -182,7 +182,7 @@ export default function FrontPageTerminal() {
           });
       } else if (currentStep === "ID_signup") {
         // Sign Up Flow: Save ID and move to Password
-        setTerminalHistory((prev) => [...prev, `> ENTER GOON ID: ${input}`]);
+        setTerminalHistory((prev) => [...prev, `> ENTER sicario ID: ${input}`]);
         setLoginData({ username: input, pass: "" }); // Set new username
         setUserInput("");
         setCurrentStep("PASS_signup");
