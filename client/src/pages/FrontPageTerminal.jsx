@@ -206,7 +206,6 @@ export default function FrontPageTerminal() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-edge":"665455db9da6a53d0a3637a9fd9118a1cda2de88972ab3a78934a34490536636"
           },
           credentials: "include", // REQUIRES COOKIES
           // This is the data he is sending to your backend
