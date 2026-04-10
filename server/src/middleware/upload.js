@@ -16,4 +16,10 @@ const upload = multer({
   fileFilter,
 });
 
-module.exports = upload;
+// Single photo — profile aur feed ke liye
+const uploadSingle = upload.single("photo");
+
+// Multiple photos — heist ke liye (max 3)
+const uploadHeistPhotos = upload.array("photos", 3);
+
+module.exports = { uploadSingle, uploadHeistPhotos };

@@ -49,13 +49,24 @@ const heistSchema = z.object({
   timeline: z.string().trim().min(3).max(500),
   crew_moneyshare: z.string().trim().min(1).max(200),
   crew_threat_level: z.string().trim().min(1).max(100),
-  photos: z.array(z.string().trim().url()).max(3),
   short_description: z.string().trim().min(10).max(2000),
   payout: z.coerce.number().int().nonnegative().default(0),
   required_skills: z.array(z.string().trim().min(1)).min(1),
 });
 
 function validateHeist(req, res, next) {
+  // required_skills string ke roop mein aa sakti hai form-data se
+  if (typeof req.body.required_skills === "string") {
+    try {
+      req.body.required_skills = JSON.parse(req.body.required_skills);
+    } catch {
+      return res.status(400).json({ message: "required_skills must be a valid JSON array" });
+    }
+  }
+  if (typeof req.body.payout === "string") {
+    req.body.payout = Number(req.body.payout);
+  }
+
   const parsed = heistSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({
@@ -83,6 +94,17 @@ const profileSchema = z.object({
 });
 
 function validateProfile(req, res, next) {
+  // Arrays string ke roop mein aa sakti hain form-data se
+  ["skills", "languages"].forEach((key) => {
+    if (typeof req.body[key] === "string") {
+      try {
+        req.body[key] = JSON.parse(req.body[key]);
+      } catch {
+        // ignore, zod handle karega
+      }
+    }
+  });
+
   const parsed = profileSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({

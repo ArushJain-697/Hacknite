@@ -19,7 +19,7 @@ exports.createPost = async (req, res) => {
 
     if (req.file) {
       try {
-        const cloudRes = await uploadToCloudinary(req.file.buffer);
+        const cloudRes = await uploadToCloudinary(req.file.buffer, "newspaper");
         image_url = cloudRes.secure_url;
         image_public_id = cloudRes.public_id;
       } catch (uploadError) {
@@ -38,7 +38,6 @@ exports.createPost = async (req, res) => {
       postId: result.insertId,
       image_url,
     });
-
   } catch (error) {
     console.error("Error creating post:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -78,7 +77,7 @@ exports.castVote = async (req, res) => {
   try {
     const userId = req.user.sub;
     const postId = parseInt(req.params.id);
-    const { vote } = req.body; // 1 or -1
+    const { vote } = req.body;
 
     if (isNaN(postId)) {
       return res.status(400).json({ message: "Invalid post ID." });
@@ -88,7 +87,6 @@ exports.castVote = async (req, res) => {
       return res.status(400).json({ message: "Vote must be 1 (upvote) or -1 (downvote)." });
     }
 
-    // Check post exists
     const [postRows] = await pool.query(
       "SELECT id FROM newspaper_posts WHERE id = ? LIMIT 1",
       [postId]
@@ -97,7 +95,6 @@ exports.castVote = async (req, res) => {
       return res.status(404).json({ message: "Post not found." });
     }
 
-    // Check existing vote
     const [existing] = await pool.query(
       "SELECT vote FROM post_votes WHERE post_id = ? AND user_id = ? LIMIT 1",
       [postId, userId]
@@ -105,14 +102,12 @@ exports.castVote = async (req, res) => {
 
     if (existing.length > 0) {
       if (existing[0].vote === vote) {
-        // Same vote again — remove it (toggle off)
         await pool.query(
           "DELETE FROM post_votes WHERE post_id = ? AND user_id = ?",
           [postId, userId]
         );
         return res.json({ my_vote: null, message: "Vote removed." });
       } else {
-        // Switch vote (upvote → downvote or vice versa)
         await pool.query(
           "UPDATE post_votes SET vote = ? WHERE post_id = ? AND user_id = ?",
           [vote, postId, userId]
@@ -120,14 +115,12 @@ exports.castVote = async (req, res) => {
         return res.json({ my_vote: vote, message: "Vote updated." });
       }
     } else {
-      // Fresh vote
       await pool.query(
         "INSERT INTO post_votes (post_id, user_id, vote) VALUES (?, ?, ?)",
         [postId, userId, vote]
       );
       return res.json({ my_vote: vote, message: "Vote cast." });
     }
-
   } catch (error) {
     console.error("Error casting vote:", error);
     return res.status(500).json({ message: "Internal server error" });

@@ -1,7 +1,6 @@
 const { pool } = require("../db");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 
-// GET /api/sicario/profile
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.sub;
@@ -41,20 +40,12 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// PUT /api/sicario/profile
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.sub;
     const {
-      name,
-      title,
-      height,
-      weight,
-      languages,
-      blood_group,
-      clearance_level,
-      about,
-      skills,
+      name, title, height, weight,
+      languages, blood_group, clearance_level, about, skills,
     } = req.body;
 
     let photo_url = null;
@@ -62,7 +53,7 @@ exports.updateProfile = async (req, res) => {
 
     if (req.file) {
       try {
-        const cloudRes = await uploadToCloudinary(req.file.buffer);
+        const cloudRes = await uploadToCloudinary(req.file.buffer, "profiles");
         photo_url = cloudRes.secure_url;
         photo_public_id = cloudRes.public_id;
       } catch (uploadError) {
@@ -71,17 +62,13 @@ exports.updateProfile = async (req, res) => {
       }
     }
 
-    // Check if profile already exists
     const [existing] = await pool.query(
-      "SELECT id, photo_url, photo_public_id FROM sicario_profiles WHERE user_id = ? LIMIT 1",
+      "SELECT id FROM sicario_profiles WHERE user_id = ? LIMIT 1",
       [userId]
     );
 
     if (existing.length > 0) {
-      // UPDATE — only update photo if new one uploaded
-      const updatePhoto = photo_url
-        ? ", photo_url = ?, photo_public_id = ?"
-        : "";
+      const updatePhoto = photo_url ? ", photo_url = ?, photo_public_id = ?" : "";
       const params = [
         name ?? null,
         title ?? null,
@@ -106,24 +93,17 @@ exports.updateProfile = async (req, res) => {
         params
       );
     } else {
-      // INSERT fresh profile
       await pool.query(
         `INSERT INTO sicario_profiles 
           (user_id, name, title, height, weight, languages, blood_group, clearance_level, about, skills, photo_url, photo_public_id)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
-          name ?? null,
-          title ?? null,
-          height ?? null,
-          weight ?? null,
+          name ?? null, title ?? null, height ?? null, weight ?? null,
           JSON.stringify(languages ?? []),
-          blood_group ?? null,
-          clearance_level ?? null,
-          about ?? null,
+          blood_group ?? null, clearance_level ?? null, about ?? null,
           JSON.stringify(skills ?? []),
-          photo_url,
-          photo_public_id,
+          photo_url, photo_public_id,
         ]
       );
     }

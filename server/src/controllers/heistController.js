@@ -1,4 +1,5 @@
 const { pool } = require("../db");
+const { uploadToCloudinary } = require("../utils/cloudinary");
 
 exports.postHeist = async (req, res) => {
   try {
@@ -10,21 +11,38 @@ exports.postHeist = async (req, res) => {
       timeline,
       crew_moneyshare,
       crew_threat_level,
-      photos,
       short_description,
       payout = 0,
       required_skills,
     } = req.body;
 
+    // Photos upload karo Cloudinary pe
+    let photos = [];
+    if (req.files && req.files.length > 0) {
+      try {
+        const uploadPromises = req.files.map((file) =>
+          uploadToCloudinary(file.buffer, "heists")
+        );
+        const results = await Promise.all(uploadPromises);
+        photos = results.map((r) => ({
+          url: r.secure_url,
+          public_id: r.public_id,
+        }));
+      } catch (uploadError) {
+        console.error("Cloudinary upload failed:", uploadError);
+        return res.status(502).json({ message: "Photo upload failed. Try again." });
+      }
+    }
+
     const title = heading;
-    const descriptionParts = [
+    const description = [
       `Subheading: ${subheading}`,
       quote ? `Quote: ${quote}` : null,
       `Timeline: ${timeline}`,
       `Crew: Moneyshare ${crew_moneyshare}, Threat Level ${crew_threat_level}`,
       `Short Description: ${short_description}`,
-    ].filter(Boolean);
-    const description = descriptionParts.join("\n");
+    ].filter(Boolean).join("\n");
+
     const crewDetails = {
       moneyshare: crew_moneyshare,
       threat_level: crew_threat_level,
@@ -32,8 +50,8 @@ exports.postHeist = async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO heists 
-      (fixer_id, title, description, payout, required_skills, heading, subheading, quote, timeline, crew_details, photos, short_description, status) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (fixer_id, title, description, payout, required_skills, heading, subheading, quote, timeline, crew_details, photos, short_description, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         fixerId,
         title,
@@ -54,6 +72,7 @@ exports.postHeist = async (req, res) => {
     return res.status(201).json({
       message: "Heist posted. Sicarios incoming.",
       heistId: result.insertId,
+      photos,
     });
   } catch (error) {
     console.error("Error posting heist:", error);
@@ -67,22 +86,18 @@ exports.getMyHeists = async (req, res) => {
 
     const [heists] = await pool.query(
       `SELECT 
-        id, title, description, payout, required_skills, heading, subheading, quote, timeline, crew_details, photos, short_description, status, created_at 
-      FROM heists 
-      WHERE fixer_id = ? 
-      ORDER BY created_at DESC`,
+        id, title, description, payout, required_skills, heading, subheading, 
+        quote, timeline, crew_details, photos, short_description, status, created_at 
+       FROM heists 
+       WHERE fixer_id = ? 
+       ORDER BY created_at DESC`,
       [fixerId]
     );
 
     const parseMaybeJson = (value, fallback) => {
       if (value == null) return fallback;
       if (typeof value === "object") return value;
-      if (typeof value !== "string") return fallback;
-      try {
-        return JSON.parse(value);
-      } catch {
-        return fallback;
-      }
+      try { return JSON.parse(value); } catch { return fallback; }
     };
 
     const parsed = heists.map((h) => ({
@@ -108,7 +123,6 @@ exports.getApplicants = async (req, res) => {
       return res.status(400).json({ message: "Invalid heist ID." });
     }
 
-    // Make sure this heist belongs to this fixer
     const [heistRows] = await pool.query(
       "SELECT id FROM heists WHERE id = ? AND fixer_id = ? LIMIT 1",
       [heistId, fixerId]
