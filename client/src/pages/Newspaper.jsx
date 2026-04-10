@@ -117,12 +117,19 @@ export default function Newspaper() {
           </HTMLFlipBook>
         </div>
 
-        {/* DECORATION */}
         <img
           src="/assets/wanted.jpeg"
           alt="wanted image"
           draggable={false}
           className="absolute right-20 z-19 top-15 rotate-160 max-w-30 p-1 hover:border-2 border-amber-300 hover:scale-110s box-content "
+        />
+        <img
+          src="/assets/bullets.png"
+          onMouseOver={e => (e.currentTarget.src = "/assets/bulletsHover.png")}
+          onMouseOut={e => (e.currentTarget.src = "/assets/bullets.png")}
+          alt="wanted image"
+          draggable={false}
+          className="absolute left-20 z-19 bottom-15 rotate-160 max-w-50 p-1 box-content "
         />
         <EvidenceGun />
       </div>
@@ -146,6 +153,10 @@ function SinglePage() {
           <p className="newsContent text-justify">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus
             numquam quaerat ipsa commodi earum optio quia ut, quis distinctio
+            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis distinctio
+            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis distinctio
+            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis distinctio
+            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis distinctio
             pariatur cumque amet vitae dolore non nobis. Atque numquam nihil
             facere vitae quis aliquid incidunt quia, voluptas sequi.
           </p>
@@ -160,6 +171,10 @@ function SinglePage() {
           <p className="newsContent text-justify">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus
             numquam quaerat ipsa commodi earum optio quia ut, quis distinctio
+            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis distinctio
+            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis distinctio
+            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis distinctio
+            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis distinctio
             pariatur cumque amet vitae dolore non nobis. Atque numquam nihil
             facere vitae quis aliquid incidunt quia, voluptas sequi.
           </p>
@@ -203,8 +218,8 @@ function FrontPage() {
                 consequatur ab inventore dolorem it. Tempore, nobis.modi earum
                 optio quia ut, quis ectus quidem pariatur recusandae odio rem?
               </p>
-              <div className="advertisement w-full border-2 p-8 mt-1 flex items-center justify-center">
-                <h1 className="text-3xl"> This is some Advertisement</h1>
+              <div className="advertisement w-full border-2 p-0 mt-1 flex items-center justify-center">
+                  <img src="/assets/advert.svg" alt="advertisement for front page" className=" m-0 w-[80%]" />hi
               </div>
             </div>
           </div>
