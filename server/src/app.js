@@ -82,6 +82,9 @@ app.use((err, _req, res, _next) => {
   if (err && err.message === "Not allowed by CORS") {
     return res.status(403).json({ message: "CORS blocked this origin" });
   }
+  if (err && err.message === "Only image files are allowed (jpg, png, webp, gif)") {
+    return res.status(400).json({ message: err.message });
+  }
   console.error("Unhandled error:", err);
   const response = { message: "Internal server error" };
   if (process.env.NODE_ENV !== "production") response.error = err?.message || "Unknown error";
