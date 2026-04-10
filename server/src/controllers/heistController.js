@@ -9,14 +9,12 @@ exports.postHeist = async (req, res) => {
       subheading,
       quote = "",
       timeline,
-      crew_moneyshare,
       crew_threat_level,
       short_description,
       payout = 0,
       required_skills,
     } = req.body;
 
-    // Photos upload karo Cloudinary pe
     let photos = [];
     if (req.files && req.files.length > 0) {
       try {
@@ -39,12 +37,11 @@ exports.postHeist = async (req, res) => {
       `Subheading: ${subheading}`,
       quote ? `Quote: ${quote}` : null,
       `Timeline: ${timeline}`,
-      `Crew: Moneyshare ${crew_moneyshare}, Threat Level ${crew_threat_level}`,
+      `Threat Level: ${crew_threat_level}`,
       `Short Description: ${short_description}`,
     ].filter(Boolean).join("\n");
 
     const crewDetails = {
-      moneyshare: crew_moneyshare,
       threat_level: crew_threat_level,
     };
 
