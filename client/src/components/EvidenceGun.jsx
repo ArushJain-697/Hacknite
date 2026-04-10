@@ -46,6 +46,9 @@ function GunMesh({ isZoomed, setIsZoomed, setHovered }) {
   return (
     <group
       ref={gunGroupRef}
+      position={tablePosition} 
+      rotation={tableRotation}
+      scale={tableScale}
       onPointerOver={(e) => {
         e.stopPropagation();
         setHovered(true); // Pass hover state up to parent
