@@ -3,6 +3,8 @@ const { z } = require("zod");
 const credentialsSchema = z.object({
   username: z.string().trim().min(3).max(100),
   password: z.string().min(6).max(128),
+  // NAYI LINE: Allow role to be sent from frontend
+  role: z.enum(["sicario", "fixer"]).optional(), 
 });
 
 function validateCredentials(req, res, next) {
@@ -21,6 +23,4 @@ function validateCredentials(req, res, next) {
   return next();
 }
 
-module.exports = {
-  validateCredentials,
-};
+module.exports = { validateCredentials };

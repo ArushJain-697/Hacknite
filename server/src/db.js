@@ -45,6 +45,23 @@ async function initDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // ==========================================
+  // 💣 NAYI TABLE: HEISTS (Jobs posted by Fixers)
+  // ==========================================
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS heists (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      fixer_id INT NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      payout INT NOT NULL,
+      required_skills JSON,
+      status VARCHAR(50) DEFAULT 'OPEN',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (fixer_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
 }
 
 module.exports = {
