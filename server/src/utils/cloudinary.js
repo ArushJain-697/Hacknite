@@ -16,7 +16,7 @@ const uploadToCloudinary = (buffer) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: "syndicate_newspaper",
+        folder: "dainik_sinner",
         resource_type: "auto", // Mistake 3 fix: explicit rakho
       },
       (error, result) => {
