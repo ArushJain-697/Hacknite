@@ -16,7 +16,9 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS users (
       id INT AUTO_INCREMENT PRIMARY KEY,
       username VARCHAR(100) NOT NULL UNIQUE,
+      email VARCHAR(255),
       password VARCHAR(255) NOT NULL,
+      role VARCHAR(50) DEFAULT 'mercenary',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -25,7 +27,8 @@ async function initDatabase() {
       id INT AUTO_INCREMENT PRIMARY KEY,
       author_id INT NOT NULL,
       content TEXT NOT NULL,
-      image_url VARCHAR(255),
+      image_url VARCHAR(500),
+      image_public_id VARCHAR(255),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
     )
