@@ -67,7 +67,7 @@ export default function FrontPageTerminal() {
   }, []);
 
   const [loginData, setLoginData] = useState({ username: "", pass: "" });
-
+let userRole=""
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -83,6 +83,7 @@ export default function FrontPageTerminal() {
       if (currentStep === "ROLE") {
         const roleInput = input.toLowerCase();
         if (roleInput === "sicario" || roleInput === "fixer") {
+          userRole=roleInput;
           setTerminalHistory((prev) => [
             ...prev,
             `> Type :  sicario/fixer : ${input}`,
@@ -157,6 +158,7 @@ export default function FrontPageTerminal() {
           body: JSON.stringify({
             username: loginData.username,
             password: password,
+            // role:userRole,
           }),
         })
           .then(async (response) => {
@@ -212,6 +214,7 @@ export default function FrontPageTerminal() {
           body: JSON.stringify({
             username: loginData.username,
             password: password,
+            // role:userRole,
           }),
         })
           .then(async (response) => {

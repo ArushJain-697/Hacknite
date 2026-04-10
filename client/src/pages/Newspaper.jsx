@@ -172,7 +172,45 @@ function SinglePage() {
 function FrontPage() {
   return (
     <div className="page p-3 bg-[url('/assets/Newspaper.png')] grayscale bg-contain h-[85vh] w-[35vw] flex items-center flex-col">
-      <img src="/assets/frontPageBG.png" alt="front page" className="w-[90%]" />
+      <div className="page p-3 bg-[url('/assets/Newspaper.png')] grayscale bg-cover h-[85vh] w-[35vw] flex items-center flex-col">
+        <div className="w-full h-[0.3em] m-1 font-black block bg-black"></div>
+        <div className="w-full h-[0.05em] mb-1 font-black block bg-black"></div>
+        <img src="/assets/newsPaperName.svg" alt="" className="w-[95%] " />
+        <div className="w-full h-[0.3em] m-1 mb-0 font-black block bg-black"></div>
+        <div className="font-[Arapey] text-[1.1em] flex justify-between pl-5 pr-5 w-full">
+          <span>Vol1</span>
+          <span className="italic">Sin City's Oly trusted Daily</span>
+          <span>Price:$0.50</span>
+        </div>
+        <div className="w-full h-[0.05em] mt-0 font-black block bg-black"></div>
+        <div className="w-full h-[0.3em] m-1 font-black block bg-black"></div>
+        <div className="content flex flex-col items-center w-[95%] h-full">
+          <img src="/assets/crime.svg" alt="" className="w-[95%] m-5" />
+          <div className="w-full h-[0.3em] m-1 font-black block bg-black"></div>
+          <div className="w-full h-[0.05em] mt-0 font-black block bg-black"></div>
+          <div className="paragraphs h-full w-full flex gap-4 mt-3 flex-col ">
+            <div className=" w-full h-full ">
+              <img
+                src="/assets/test.png"
+                className="newsImage max-w-[45%] float-left mr-4 "
+              />
+              <p className="newsContent text-justify">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus
+                numquam quaerat ipsa commodi earum optio quia ut, quis ectus
+                quidem pariatur recusandae odio rem?numquam quaerat ipsa com
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+                Aliquam neque tempore cupiditate, asperiores doloribus
+                consequatur ab inventore dolorem it. Tempore, nobis.modi earum
+                optio quia ut, quis ectus quidem pariatur recusandae odio rem?
+              </p>
+              <div className="advertisement w-full border-2 p-8 mt-1 flex items-center justify-center">
+                <h1 className="text-3xl"> This is some Advertisement</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* <img src="/assets/frontPageBG.png" alt="front page" className="w-[90%]" /> */}
     </div>
   );
 }
