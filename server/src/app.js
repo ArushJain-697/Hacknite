@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 const heistRoutes = require("./routes/heistRoutes");
+const sicarioRoutes = require("./routes/sicarioRoutes");
 
 const app = express();
 
@@ -68,6 +69,7 @@ const apiRouter = express.Router();
 apiRouter.use("/auth", authRoutes);
 apiRouter.use("/posts", postRoutes);
 apiRouter.use("/heists", heistRoutes);
+apiRouter.use("/sicario", sicarioRoutes);
 
 app.use("/api", apiRouter);
 

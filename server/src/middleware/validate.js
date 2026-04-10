@@ -23,7 +23,6 @@ function validateRegisterCredentials(req, res, next) {
       })),
     });
   }
-
   req.body = parsed.data;
   return next();
 }
@@ -39,7 +38,6 @@ function validateLoginCredentials(req, res, next) {
       })),
     });
   }
-
   req.body = parsed.data;
   return next();
 }
@@ -68,7 +66,33 @@ function validateHeist(req, res, next) {
       })),
     });
   }
+  req.body = parsed.data;
+  return next();
+}
 
+const profileSchema = z.object({
+  name: z.string().trim().max(200).optional(),
+  title: z.string().trim().max(200).optional(),
+  height: z.string().trim().max(50).optional(),
+  weight: z.string().trim().max(50).optional(),
+  languages: z.array(z.string().trim().min(1)).optional(),
+  blood_group: z.string().trim().max(10).optional(),
+  clearance_level: z.string().trim().max(100).optional(),
+  about: z.string().trim().max(5000).optional(),
+  skills: z.array(z.string().trim().min(1)).optional(),
+});
+
+function validateProfile(req, res, next) {
+  const parsed = profileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Invalid profile data",
+      errors: parsed.error.issues.map((issue) => ({
+        path: issue.path.join("."),
+        message: issue.message,
+      })),
+    });
+  }
   req.body = parsed.data;
   return next();
 }
@@ -77,4 +101,5 @@ module.exports = {
   validateRegisterCredentials,
   validateLoginCredentials,
   validateHeist,
+  validateProfile,
 };

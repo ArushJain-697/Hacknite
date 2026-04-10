@@ -22,9 +22,8 @@ async function initDatabase() {
        LIMIT 1`,
       [tableName, columnName]
     );
-
     if (rows.length === 0) {
-      await pool.query(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDef}`);
+      await pool.query(`ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${columnDef}`);
     }
   }
 
@@ -34,21 +33,17 @@ async function initDatabase() {
       username VARCHAR(100) NOT NULL UNIQUE,
       email VARCHAR(255),
       password VARCHAR(255) NOT NULL,
-      role VARCHAR(50) DEFAULT 'sicario',
+      role VARCHAR(50) NOT NULL DEFAULT 'sicario',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  // Ensure role column can store the new role names.
   await pool.query(`
-    ALTER TABLE users
-    MODIFY COLUMN role VARCHAR(50) NOT NULL DEFAULT 'sicario'
+    ALTER TABLE users MODIFY COLUMN role VARCHAR(50) NOT NULL DEFAULT 'sicario'
   `);
 
-  // Role migration to the new vocabulary used by the app.
   await pool.query(`
-    UPDATE users
-    SET role = CASE
+    UPDATE users SET role = CASE
       WHEN role = 'mercenary' THEN 'fixer'
       WHEN role = 'mastermind' THEN 'sicario'
       ELSE role
@@ -93,6 +88,7 @@ async function initDatabase() {
       crew_details JSON,
       photos JSON,
       short_description TEXT,
+      payout INT NOT NULL DEFAULT 0,
       status VARCHAR(50) DEFAULT 'open',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (fixer_id) REFERENCES users(id) ON DELETE CASCADE
@@ -106,21 +102,37 @@ async function initDatabase() {
   await ensureColumnExists("heists", "crew_details", "JSON");
   await ensureColumnExists("heists", "photos", "JSON");
   await ensureColumnExists("heists", "short_description", "TEXT");
-
-  await pool.query(`
-    ALTER TABLE heists
-    MODIFY COLUMN payout INT NOT NULL DEFAULT 0
-  `);
+  await ensureColumnExists("heists", "payout", "INT NOT NULL DEFAULT 0");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sicario_profiles (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL UNIQUE,
-      bio TEXT,
+      name VARCHAR(200),
+      title VARCHAR(200),
+      height VARCHAR(50),
+      weight VARCHAR(50),
+      languages JSON,
+      blood_group VARCHAR(10),
+      clearance_level VARCHAR(100),
+      about TEXT,
       skills JSON,
+      photo_url VARCHAR(500),
+      photo_public_id VARCHAR(255),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  await ensureColumnExists("sicario_profiles", "name", "VARCHAR(200)");
+  await ensureColumnExists("sicario_profiles", "title", "VARCHAR(200)");
+  await ensureColumnExists("sicario_profiles", "height", "VARCHAR(50)");
+  await ensureColumnExists("sicario_profiles", "weight", "VARCHAR(50)");
+  await ensureColumnExists("sicario_profiles", "languages", "JSON");
+  await ensureColumnExists("sicario_profiles", "blood_group", "VARCHAR(10)");
+  await ensureColumnExists("sicario_profiles", "clearance_level", "VARCHAR(100)");
+  await ensureColumnExists("sicario_profiles", "about", "TEXT");
+  await ensureColumnExists("sicario_profiles", "photo_url", "VARCHAR(500)");
+  await ensureColumnExists("sicario_profiles", "photo_public_id", "VARCHAR(255)");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS applications (
@@ -137,7 +149,4 @@ async function initDatabase() {
   `);
 }
 
-module.exports = {
-  pool,
-  initDatabase,
-};
+module.exports = { pool, initDatabase };
