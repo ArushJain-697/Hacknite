@@ -4,7 +4,7 @@ import HTMLFlipBook from "react-pageflip";
 import CinematicPage from "../components/CinematicPage";
 import "../scripts/fittext.js";
 import EvidenceGun from "../components/EvidenceGun.jsx";
-
+import LoadingScreen from "../components/LoadingScreen.jsx";
 // 1. MOVED OUTSIDE: This prevents React from destroying the pages on every click!
 const Page = React.forwardRef((props, ref) => {
   return props.front === false ? (
@@ -43,6 +43,8 @@ export default function Newspaper() {
 
   return (
     <CinematicPage>
+      <LoadingScreen />
+
       <div className=" bgTable bg-[url('/assets/table.png')] fixed inset-0 flex justify-center items-center bg-cover overflow-hidden">
         {/* 1. DARK OVERLAY */}
         <div
@@ -125,6 +127,7 @@ export default function Newspaper() {
         <EvidenceGun />
       </div>
     </CinematicPage>
+
   );
 }
 
