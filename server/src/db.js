@@ -36,9 +36,10 @@ async function initDatabase() {
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS post_likes (
+    CREATE TABLE IF NOT EXISTS post_votes (
       post_id INT NOT NULL,
       user_id INT NOT NULL,
+      vote TINYINT NOT NULL,
       PRIMARY KEY (post_id, user_id),
       FOREIGN KEY (post_id) REFERENCES newspaper_posts(id) ON DELETE CASCADE,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

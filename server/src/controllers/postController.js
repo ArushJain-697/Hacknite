@@ -56,11 +56,13 @@ exports.getFeed = async (req, res) => {
         np.image_url,
         np.created_at,
         u.username AS author,
-        COUNT(DISTINCT pl.user_id) AS like_count,
-        MAX(CASE WHEN pl.user_id = ? THEN 1 ELSE 0 END) AS liked_by_me
+        COALESCE(SUM(CASE WHEN pv.vote = 1 THEN 1 ELSE 0 END), 0) AS upvotes,
+        COALESCE(SUM(CASE WHEN pv.vote = -1 THEN 1 ELSE 0 END), 0) AS downvotes,
+        COALESCE(SUM(pv.vote), 0) AS score,
+        MAX(CASE WHEN pv.user_id = ? THEN pv.vote ELSE NULL END) AS my_vote
       FROM newspaper_posts np
       JOIN users u ON np.author_id = u.id
-      LEFT JOIN post_likes pl ON pl.post_id = np.id
+      LEFT JOIN post_votes pv ON pv.post_id = np.id
       GROUP BY np.id, np.content, np.image_url, np.created_at, u.username
       ORDER BY np.created_at DESC
     `, [userId]);
@@ -72,15 +74,21 @@ exports.getFeed = async (req, res) => {
   }
 };
 
-exports.toggleLike = async (req, res) => {
+exports.castVote = async (req, res) => {
   try {
     const userId = req.user.sub;
     const postId = parseInt(req.params.id);
+    const { vote } = req.body; // 1 or -1
 
     if (isNaN(postId)) {
       return res.status(400).json({ message: "Invalid post ID." });
     }
 
+    if (vote !== 1 && vote !== -1) {
+      return res.status(400).json({ message: "Vote must be 1 (upvote) or -1 (downvote)." });
+    }
+
+    // Check post exists
     const [postRows] = await pool.query(
       "SELECT id FROM newspaper_posts WHERE id = ? LIMIT 1",
       [postId]
@@ -89,27 +97,39 @@ exports.toggleLike = async (req, res) => {
       return res.status(404).json({ message: "Post not found." });
     }
 
+    // Check existing vote
     const [existing] = await pool.query(
-      "SELECT 1 FROM post_likes WHERE post_id = ? AND user_id = ? LIMIT 1",
+      "SELECT vote FROM post_votes WHERE post_id = ? AND user_id = ? LIMIT 1",
       [postId, userId]
     );
 
     if (existing.length > 0) {
-      await pool.query(
-        "DELETE FROM post_likes WHERE post_id = ? AND user_id = ?",
-        [postId, userId]
-      );
-      return res.json({ liked: false, message: "Post unliked." });
+      if (existing[0].vote === vote) {
+        // Same vote again — remove it (toggle off)
+        await pool.query(
+          "DELETE FROM post_votes WHERE post_id = ? AND user_id = ?",
+          [postId, userId]
+        );
+        return res.json({ my_vote: null, message: "Vote removed." });
+      } else {
+        // Switch vote (upvote → downvote or vice versa)
+        await pool.query(
+          "UPDATE post_votes SET vote = ? WHERE post_id = ? AND user_id = ?",
+          [vote, postId, userId]
+        );
+        return res.json({ my_vote: vote, message: "Vote updated." });
+      }
     } else {
+      // Fresh vote
       await pool.query(
-        "INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)",
-        [postId, userId]
+        "INSERT INTO post_votes (post_id, user_id, vote) VALUES (?, ?, ?)",
+        [postId, userId, vote]
       );
-      return res.json({ liked: true, message: "Post liked." });
+      return res.json({ my_vote: vote, message: "Vote cast." });
     }
 
   } catch (error) {
-    console.error("Error toggling like:", error);
+    console.error("Error casting vote:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

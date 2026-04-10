@@ -3,10 +3,10 @@ const router = express.Router();
 
 const { requireAuth } = require("../middleware/auth");
 const upload = require("../middleware/upload");
-const { createPost, getFeed, toggleLike } = require("../controllers/postController");
+const { createPost, getFeed, castVote } = require("../controllers/postController");
 
 router.get("/", requireAuth, getFeed);
 router.post("/add", requireAuth, upload.single("image"), createPost);
-router.post("/:id/like", requireAuth, toggleLike);
+router.post("/:id/vote", requireAuth, castVote);
 
 module.exports = router;
