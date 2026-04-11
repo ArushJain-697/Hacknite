@@ -3,7 +3,7 @@ const { uploadToCloudinary } = require("../utils/cloudinary");
 
 exports.createPost = async (req, res) => {
   try {
-    const { content } = req.body;
+    const { title, content } = req.body;
     const authorId = req.user.sub;
 
     if (!authorId) {
@@ -29,8 +29,8 @@ exports.createPost = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      "INSERT INTO newspaper_posts (author_id, content, image_url, image_public_id) VALUES (?, ?, ?, ?)",
-      [authorId, content.trim(), image_url, image_public_id]
+      "INSERT INTO newspaper_posts (author_id, title, content, image_url, image_public_id) VALUES (?, ?, ?, ?, ?)",
+      [authorId, title?.trim() ?? null, content.trim(), image_url, image_public_id]
     );
 
     return res.status(201).json({
@@ -51,6 +51,7 @@ exports.getFeed = async (req, res) => {
     const [posts] = await pool.query(`
       SELECT 
         np.id,
+        np.title,
         np.content,
         np.image_url,
         np.created_at,
@@ -62,7 +63,7 @@ exports.getFeed = async (req, res) => {
       FROM newspaper_posts np
       JOIN users u ON np.author_id = u.id
       LEFT JOIN post_votes pv ON pv.post_id = np.id
-      GROUP BY np.id, np.content, np.image_url, np.created_at, u.username
+      GROUP BY np.id, np.title, np.content, np.image_url, np.created_at, u.username
       ORDER BY np.created_at DESC
     `, [userId]);
 

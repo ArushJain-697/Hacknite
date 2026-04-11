@@ -55,6 +55,7 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS newspaper_posts (
       id INT AUTO_INCREMENT PRIMARY KEY,
       author_id INT NOT NULL,
+      title VARCHAR(300),
       content TEXT NOT NULL,
       image_url VARCHAR(500),
       image_public_id VARCHAR(255),
@@ -62,6 +63,8 @@ async function initDatabase() {
       FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  await ensureColumnExists("newspaper_posts", "title", "VARCHAR(300)");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS post_votes (
