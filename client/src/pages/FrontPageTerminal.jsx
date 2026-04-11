@@ -148,7 +148,7 @@ export default function FrontPageTerminal() {
 
         startTypedAnimation(["<br/>VERIFYING... ^800 "]);
 
-        // 
+        //
         fetch(`${apiBaseUrl}/api/auth/login`, {
           method: "POST",
           headers: {
@@ -196,7 +196,6 @@ export default function FrontPageTerminal() {
         ]);
         setIsProcessingInput(false);
       } else if (currentStep === "PASS_signup") {
-
         setTerminalHistory((prev) => [...prev, `> ENTER PASSWORD: ********`]);
         const password = input;
         setUserInput("");
@@ -214,7 +213,7 @@ export default function FrontPageTerminal() {
           body: JSON.stringify({
             username: loginData.username,
             password: password,
-            // role:userRole,
+            role: userRole,
           }),
         })
           .then(async (response) => {
@@ -222,7 +221,9 @@ export default function FrontPageTerminal() {
             if (!response.ok) {
               // This will catch Edge Guard 'error' or authController 'message'
               throw new Error(
-                data?.error || data?.message || `Registration failed: ${response.status}`,
+                data?.error ||
+                  data?.message ||
+                  `Registration failed: ${response.status}`,
               );
             }
             return data;
