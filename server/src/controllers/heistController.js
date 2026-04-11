@@ -101,23 +101,25 @@ exports.getApplicants = async (req, res) => {
     }
 
     const [applicants] = await pool.query(`
-      SELECT 
-        a.id AS application_id,
-        a.fit_score,
-        a.status,
-        a.created_at,
-        u.id AS sicario_id,
-        u.username,
-        sp.name,
-        sp.bio,
-        sp.skills,
-        sp.photo_url
-      FROM applications a
-      JOIN users u ON a.sicario_id = u.id
-      LEFT JOIN sicario_profiles sp ON sp.user_id = u.id
-      WHERE a.heist_id = ?
-      ORDER BY a.fit_score DESC
-    `, [heistId]);
+  SELECT 
+    a.id AS application_id,
+    a.fit_score,
+    a.status,
+    a.created_at,
+    u.id AS sicario_id,
+    u.username,
+    sp.name,
+    sp.title,
+    sp.about AS bio,
+    sp.skills,
+    sp.clearance_level,
+    sp.photo_url
+  FROM applications a
+  JOIN users u ON a.sicario_id = u.id
+  LEFT JOIN sicario_profiles sp ON sp.user_id = u.id
+  WHERE a.heist_id = ?
+  ORDER BY a.fit_score DESC
+`, [heistId]);
 
     const parsed = applicants.map((a) => ({
       ...a,
@@ -145,7 +147,6 @@ exports.updateApplicationStatus = async (req, res) => {
       return res.status(400).json({ message: "Status must be 'accepted' or 'rejected'." });
     }
 
-    // Application exist karti hai aur is fixer ki heist ka part hai?
     const [rows] = await pool.query(
       `SELECT a.id FROM applications a
        JOIN heists h ON a.heist_id = h.id
