@@ -114,7 +114,6 @@ exports.getHeists = async (req, res) => {
   try {
     const userId = req.user.sub;
 
-    // Sicario ki skills fetch karo
     const [profileRows] = await pool.query(
       "SELECT skills FROM sicario_profiles WHERE user_id = ? LIMIT 1",
       [userId]
@@ -126,11 +125,9 @@ exports.getHeists = async (req, res) => {
       try { return JSON.parse(value); } catch { return fallback; }
     };
 
-    // Sicario skills lowercase array — ["hacker", "driver"]
     const rawSkills = profileRows.length > 0 ? parseMaybeJson(profileRows[0].skills, []) : [];
     const sicarioSkills = rawSkills.map((s) => s.toLowerCase());
 
-    // Saare open heists fetch karo
     const [heists] = await pool.query(
       `SELECT 
         id, heading, subheading, quote, timeline,
@@ -140,7 +137,6 @@ exports.getHeists = async (req, res) => {
        WHERE status = 'open'`
     );
 
-    // Fit score calculate karo aur sort karo
     const scored = heists
       .map((h) => {
         const requiredSkills = parseMaybeJson(h.required_skills, []);
@@ -157,15 +153,81 @@ exports.getHeists = async (req, res) => {
           required_skills: requiredSkills,
           crew_details: parseMaybeJson(h.crew_details, null),
           photos: parseMaybeJson(h.photos, []),
-          _fitScore: fitScore, // internal sorting ke liye
+          _fitScore: fitScore,
         };
       })
       .sort((a, b) => b._fitScore - a._fitScore)
-      .map(({ _fitScore, ...heist }) => heist); // fit_score response se hata do
+      .map(({ _fitScore, ...heist }) => heist);
 
     return res.json({ heists: scored });
   } catch (error) {
     console.error("Error fetching heists:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.applyToHeist = async (req, res) => {
+  try {
+    const sicarioId = req.user.sub;
+    const heistId = parseInt(req.params.heistId);
+
+    if (isNaN(heistId)) {
+      return res.status(400).json({ message: "Invalid heist ID." });
+    }
+
+    // Heist exist aur open hai?
+    const [heistRows] = await pool.query(
+      "SELECT id, required_skills FROM heists WHERE id = ? AND status = 'open' LIMIT 1",
+      [heistId]
+    );
+    if (heistRows.length === 0) {
+      return res.status(404).json({ message: "Heist not found or no longer open." });
+    }
+
+    // Already applied?
+    const [existing] = await pool.query(
+      "SELECT id FROM applications WHERE heist_id = ? AND sicario_id = ? LIMIT 1",
+      [heistId, sicarioId]
+    );
+    if (existing.length > 0) {
+      return res.status(409).json({ message: "Already applied to this heist." });
+    }
+
+    // Fit score calculate karo
+    const parseMaybeJson = (value, fallback) => {
+      if (value == null) return fallback;
+      if (typeof value === "object") return value;
+      try { return JSON.parse(value); } catch { return fallback; }
+    };
+
+    const [profileRows] = await pool.query(
+      "SELECT skills FROM sicario_profiles WHERE user_id = ? LIMIT 1",
+      [sicarioId]
+    );
+    const rawSkills = profileRows.length > 0 ? parseMaybeJson(profileRows[0].skills, []) : [];
+    const sicarioSkills = rawSkills.map((s) => s.toLowerCase());
+
+    const requiredSkills = parseMaybeJson(heistRows[0].required_skills, []);
+    const requiredRoles = requiredSkills.map((s) => s.role?.toLowerCase()).filter(Boolean);
+
+    let fitScore = 0;
+    if (requiredRoles.length > 0) {
+      const matched = requiredRoles.filter((role) => sicarioSkills.includes(role)).length;
+      fitScore = Math.round((matched / requiredRoles.length) * 100);
+    }
+
+    // Application insert karo
+    const [result] = await pool.query(
+      "INSERT INTO applications (heist_id, sicario_id, fit_score, status) VALUES (?, ?, ?, ?)",
+      [heistId, sicarioId, fitScore, "pending"]
+    );
+
+    return res.status(201).json({
+      message: "Application submitted.",
+      applicationId: result.insertId,
+    });
+  } catch (error) {
+    console.error("Error applying to heist:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
