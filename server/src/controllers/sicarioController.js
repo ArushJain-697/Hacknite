@@ -175,7 +175,6 @@ exports.applyToHeist = async (req, res) => {
       return res.status(400).json({ message: "Invalid heist ID." });
     }
 
-    // Heist exist aur open hai?
     const [heistRows] = await pool.query(
       "SELECT id, required_skills FROM heists WHERE id = ? AND status = 'open' LIMIT 1",
       [heistId]
@@ -184,7 +183,6 @@ exports.applyToHeist = async (req, res) => {
       return res.status(404).json({ message: "Heist not found or no longer open." });
     }
 
-    // Already applied?
     const [existing] = await pool.query(
       "SELECT id FROM applications WHERE heist_id = ? AND sicario_id = ? LIMIT 1",
       [heistId, sicarioId]
@@ -193,7 +191,6 @@ exports.applyToHeist = async (req, res) => {
       return res.status(409).json({ message: "Already applied to this heist." });
     }
 
-    // Fit score calculate karo
     const parseMaybeJson = (value, fallback) => {
       if (value == null) return fallback;
       if (typeof value === "object") return value;
@@ -216,7 +213,6 @@ exports.applyToHeist = async (req, res) => {
       fitScore = Math.round((matched / requiredRoles.length) * 100);
     }
 
-    // Application insert karo
     const [result] = await pool.query(
       "INSERT INTO applications (heist_id, sicario_id, fit_score, status) VALUES (?, ?, ?, ?)",
       [heistId, sicarioId, fitScore, "pending"]
@@ -228,6 +224,36 @@ exports.applyToHeist = async (req, res) => {
     });
   } catch (error) {
     console.error("Error applying to heist:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getMyApplications = async (req, res) => {
+  try {
+    const sicarioId = req.user.sub;
+
+    const [applications] = await pool.query(
+      `SELECT
+        a.id AS application_id,
+        a.status,
+        a.fit_score,
+        a.created_at,
+        h.id AS heist_id,
+        h.heading,
+        h.subheading,
+        h.payout,
+        h.timeline,
+        h.status AS heist_status
+       FROM applications a
+       JOIN heists h ON a.heist_id = h.id
+       WHERE a.sicario_id = ?
+       ORDER BY a.created_at DESC`,
+      [sicarioId]
+    );
+
+    return res.json({ applications });
+  } catch (error) {
+    console.error("Error fetching applications:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

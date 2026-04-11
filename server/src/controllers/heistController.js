@@ -5,14 +5,8 @@ exports.postHeist = async (req, res) => {
   try {
     const fixerId = req.user.sub;
     const {
-      heading,
-      subheading,
-      quote = "",
-      timeline,
-      crew_threat_level,
-      short_description,
-      payout = 0,
-      required_skills,
+      heading, subheading, quote = "", timeline,
+      crew_threat_level, short_description, payout = 0, required_skills,
     } = req.body;
 
     let photos = [];
@@ -22,10 +16,7 @@ exports.postHeist = async (req, res) => {
           uploadToCloudinary(file.buffer, "heists")
         );
         const results = await Promise.all(uploadPromises);
-        photos = results.map((r) => ({
-          url: r.secure_url,
-          public_id: r.public_id,
-        }));
+        photos = results.map((r) => ({ url: r.secure_url, public_id: r.public_id }));
       } catch (uploadError) {
         console.error("Cloudinary upload failed:", uploadError);
         return res.status(502).json({ message: "Photo upload failed. Try again." });
@@ -39,19 +30,10 @@ exports.postHeist = async (req, res) => {
         (fixer_id, title, description, payout, required_skills, heading, subheading, quote, timeline, crew_details, photos, short_description, status) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        fixerId,
-        heading,
-        short_description, // description column mein short_description daalo — clean
-        payout,
-        JSON.stringify(required_skills),
-        heading,
-        subheading,
-        quote || null,
-        timeline,
-        JSON.stringify(crewDetails),
-        JSON.stringify(photos),
-        short_description,
-        "open",
+        fixerId, heading, short_description, payout,
+        JSON.stringify(required_skills), heading, subheading,
+        quote || null, timeline, JSON.stringify(crewDetails),
+        JSON.stringify(photos), short_description, "open",
       ]
     );
 
@@ -72,8 +54,8 @@ exports.getMyHeists = async (req, res) => {
 
     const [heists] = await pool.query(
       `SELECT 
-        id, heading, subheading, quote, timeline, 
-        payout, required_skills, crew_details, 
+        id, heading, subheading, quote, timeline,
+        payout, required_skills, crew_details,
         photos, short_description, status, created_at 
        FROM heists 
        WHERE fixer_id = ? 
@@ -124,9 +106,12 @@ exports.getApplicants = async (req, res) => {
         a.fit_score,
         a.status,
         a.created_at,
+        u.id AS sicario_id,
         u.username,
+        sp.name,
         sp.bio,
-        sp.skills
+        sp.skills,
+        sp.photo_url
       FROM applications a
       JOIN users u ON a.sicario_id = u.id
       LEFT JOIN sicario_profiles sp ON sp.user_id = u.id
@@ -142,6 +127,43 @@ exports.getApplicants = async (req, res) => {
     return res.json({ applicants: parsed });
   } catch (error) {
     console.error("Error fetching applicants:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.updateApplicationStatus = async (req, res) => {
+  try {
+    const fixerId = req.user.sub;
+    const applicationId = parseInt(req.params.applicationId);
+    const { status } = req.body;
+
+    if (isNaN(applicationId)) {
+      return res.status(400).json({ message: "Invalid application ID." });
+    }
+
+    if (!["accepted", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Status must be 'accepted' or 'rejected'." });
+    }
+
+    // Application exist karti hai aur is fixer ki heist ka part hai?
+    const [rows] = await pool.query(
+      `SELECT a.id FROM applications a
+       JOIN heists h ON a.heist_id = h.id
+       WHERE a.id = ? AND h.fixer_id = ? LIMIT 1`,
+      [applicationId, fixerId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Application not found or not yours." });
+    }
+
+    await pool.query(
+      "UPDATE applications SET status = ? WHERE id = ?",
+      [status, applicationId]
+    );
+
+    return res.json({ message: `Application ${status}.` });
+  } catch (error) {
+    console.error("Error updating application status:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
