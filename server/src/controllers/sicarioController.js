@@ -112,14 +112,12 @@ exports.updateProfile = async (req, res) => {
 
 exports.getHeists = async (req, res) => {
   try {
-    const [heists] = await pool.query(
-      `SELECT 
-        id, heading, subheading, quote, timeline,
-        payout, required_skills, crew_details,
-        photos, short_description, status, created_at
-       FROM heists
-       WHERE status = 'open'
-       ORDER BY created_at DESC`
+    const userId = req.user.sub;
+
+    // Sicario ki skills fetch karo
+    const [profileRows] = await pool.query(
+      "SELECT skills FROM sicario_profiles WHERE user_id = ? LIMIT 1",
+      [userId]
     );
 
     const parseMaybeJson = (value, fallback) => {
@@ -128,14 +126,44 @@ exports.getHeists = async (req, res) => {
       try { return JSON.parse(value); } catch { return fallback; }
     };
 
-    const parsed = heists.map((h) => ({
-      ...h,
-      required_skills: parseMaybeJson(h.required_skills, []),
-      crew_details: parseMaybeJson(h.crew_details, null),
-      photos: parseMaybeJson(h.photos, []),
-    }));
+    // Sicario skills lowercase array — ["hacker", "driver"]
+    const rawSkills = profileRows.length > 0 ? parseMaybeJson(profileRows[0].skills, []) : [];
+    const sicarioSkills = rawSkills.map((s) => s.toLowerCase());
 
-    return res.json({ heists: parsed });
+    // Saare open heists fetch karo
+    const [heists] = await pool.query(
+      `SELECT 
+        id, heading, subheading, quote, timeline,
+        payout, required_skills, crew_details,
+        photos, short_description, status, created_at
+       FROM heists
+       WHERE status = 'open'`
+    );
+
+    // Fit score calculate karo aur sort karo
+    const scored = heists
+      .map((h) => {
+        const requiredSkills = parseMaybeJson(h.required_skills, []);
+        const requiredRoles = requiredSkills.map((s) => s.role?.toLowerCase()).filter(Boolean);
+
+        let fitScore = 0;
+        if (requiredRoles.length > 0) {
+          const matched = requiredRoles.filter((role) => sicarioSkills.includes(role)).length;
+          fitScore = Math.round((matched / requiredRoles.length) * 100);
+        }
+
+        return {
+          ...h,
+          required_skills: requiredSkills,
+          crew_details: parseMaybeJson(h.crew_details, null),
+          photos: parseMaybeJson(h.photos, []),
+          _fitScore: fitScore, // internal sorting ke liye
+        };
+      })
+      .sort((a, b) => b._fitScore - a._fitScore)
+      .map(({ _fitScore, ...heist }) => heist); // fit_score response se hata do
+
+    return res.json({ heists: scored });
   } catch (error) {
     console.error("Error fetching heists:", error);
     return res.status(500).json({ message: "Internal server error" });
