@@ -68,11 +68,14 @@ app.get("/api", (_req, res) => {
 const apiRouter = express.Router();
 apiRouter.use("/auth", authRoutes);
 apiRouter.use("/posts", postRoutes);
-
 apiRouter.use("/sicario", sicarioRoutes);
 apiRouter.use("/fixer", fixerRoutes);
 
 app.use("/api", apiRouter);
+
+app.use((req, res, next) => {
+  res.status(404).json({ message: "Endpoint not found. Please check the API documentation." });
+});
 
 app.use((err, _req, res, _next) => {
   if (err && err.message === "Not allowed by CORS") {
