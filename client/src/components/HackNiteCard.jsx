@@ -156,12 +156,12 @@ export default function HackNiteCard({
       >
         {hashtagLines.map((line, idx) => (
           <p
-            key={idx}
-            className="m-0 w-fit text-left p-0 font-['Bungee'] font-normal leading-[1.2em] text-black"
-            style={{ fontSize: 24 }}
-          >
-            {line}
-          </p>
+          key={idx}
+          className="m-0 max-w-none p-0 font-['Bungee'] font-normal leading-[1.2em] text-black !text-left"
+          style={{ fontSize: 24 }}
+        >
+          {line}
+        </p>
         ))}
       </div>
     </article>

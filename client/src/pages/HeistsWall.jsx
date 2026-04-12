@@ -46,8 +46,9 @@ const HorizontalGallery = () => {
       .catch((err) => console.error("Error fetching heists data:", err));
   }, []);
 
-  const infiniteHeists =
-    heists.length > 0 ? [...heists, ...heists, ...heists] : [];
+  // const infiniteHeists =
+  // heists.length > 0 ? [...heists, ...heists, ...heists] : [];
+  const infiniteHeists =heists
 
   return (
     <CinematicPage>
@@ -73,32 +74,49 @@ const HorizontalGallery = () => {
 
         <Swiper
           modules={[FreeMode, Mousewheel]}
+          direction="horizontal"   // 👈 important
           mousewheel={{
             enabled: true,
-            sensitivity: 0.4,
-            releaseOnEdges: true,
+            forceToAxis: false,    // 👈 allow vertical wheel to control horizontal
+            sensitivity: 0.8,
+            releaseOnEdges: false,
           }}
-          freeMode={{ enabled: true, sticky: false, momentumRatio: 0.5 }}
-          loop={true}
+          freeMode={{
+            enabled: true,
+            momentum: true,
+            momentumRatio: 1.2,
+            momentumVelocityRatio: 1.1,
+          }}
+          slidesPerView="auto"
+          spaceBetween={120}
           centeredSlides={true}
           grabCursor={true}
-          slidesPerView="auto"
+          loop={false}
+          resistance={true}
+          resistanceRatio={0.5}
+          resistanceThreshold={100}
+          resistanceSpeed={100}
+          resistanceDelay={100}
+          resistanceDirection="horizontal"
           className="w-full h-full z-10"
         >
           {infiniteHeists.map((item, index) => {
+            const realIndex = index % heists.length; // original index
+
             const title =
-            item?.section_a?.operation_name || `Heist ${index + 1}`;
-          
-          // crew members → hashtags
-          const hashtags =
-            item?.section_e?.crew_members?.map(
-              (member) => `# ${member.job} ${member.money_share}`
-            ) || [];
+              item?.section_a?.operation_name || `Heist ${realIndex + 1}`;
+
+            const hashtags =
+              item?.section_e?.crew_members?.map(
+                (member) => `# ${member.job} ${member.money_share}`
+              ) || [];
 
             return (
               <SwiperSlide
-                key={index}
+                key={`${item.id}-${index}`} // ✅ VERY IMPORTANT (unique key)
                 className="!w-auto h-full !flex justify-center items-center px-[5vw]"
+                slidesPerView="auto"
+                spaceBetween={120}   // 👈 add this
               >
                 <div
                   className="relative w-fit flex-shrink-0 cursor-pointer group transform-gpu will-change-transform"
@@ -149,11 +167,10 @@ const HorizontalGallery = () => {
                   </motion.div>
 
                   <div
-                    className={`absolute inset-0 z-20 pointer-events-none transition-all duration-300 group-hover:scale-105 rounded-[inherit] ${
-                      selectedItem?.uniqueIndex === index
-                        ? "opacity-0"
-                        : "opacity-100"
-                    }`}
+                    className={`absolute inset-0 z-20 pointer-events-none transition-all duration-300 group-hover:scale-105 rounded-[inherit] ${selectedItem?.uniqueIndex === index
+                      ? "opacity-0"
+                      : "opacity-100"
+                      }`}
                     style={{
                       background:
                         "radial-gradient(120% 120% at 50% -10%, transparent 30%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.95) 100%)",
