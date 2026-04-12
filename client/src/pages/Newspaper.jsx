@@ -273,8 +273,8 @@ export default function Newspaper() {
         />
         <img
           src="/assets/handshake.png"
-          alt="Search"
-          onClick={() => navigate("/Heists")}
+          alt="connections"
+          onClick={() => navigate("/connections")}
           draggable={false}
           className="magGlass absolute left-20 z-19 top-15 rotate-0 max-w-60 box-content cursor-pointer hover:scale-110 transition-transform duration-300"
         />
