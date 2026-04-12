@@ -9,7 +9,7 @@ import WantedPoster from "../components/WantedPoster.jsx";
 import { useNavigate } from "react-router-dom";
 import HackNiteNewspaperPoster from "../components/HackNiteNewspaperPoster";
 import WantedProfileFrame from "../components/WantedProfileFrame";
-import newsPaperBG from '../../public/assets/Newspaper.png'
+import newsPaperBG from "../../public/assets/Newspaper.png";
 // ==========================================
 // CONFIGURATION: FLIPBOOK ASPECT RATIO
 // Modify these exact values to change the dimensions of the newspaper pages natively.
@@ -122,14 +122,14 @@ export default function Newspaper() {
   ];
 
   if (isOddLength) {
-  pagesArray.push(
-    <div
-      key="last-image"
-      className="demoPage bg-cover bg-center"
-      style={{ backgroundImage: `url(${newsPaperBG})` }}
-    />
-  );
-}
+    pagesArray.push(
+      <div
+        key="last-image"
+        className="demoPage bg-cover bg-center"
+        style={{ backgroundImage: `url(${newsPaperBG})` }}
+      />,
+    );
+  }
 
   return (
     <CinematicPage>
@@ -336,6 +336,12 @@ function SinglePage({ posts = [], pageNum = 1 }) {
           topPost.image ||
           topPost.photo_url
         }
+        bottomPortraitSrc={
+          bottomPost.image_url ||
+          bottomPost.photoUrl ||
+          bottomPost.photo ||
+          bottomPost.image
+        }
         bottomPostId={bottomPost._id || bottomPost.id}
         bottomPostUserVote={bottomPost.userVote || bottomPost.vote}
         headlineBottom={bottomPost.title || bottomPost.heading || ""}
@@ -373,20 +379,20 @@ function FrontPage() {
           <div className="paragraphs h-full w-full flex gap-4 mt-3 flex-col ">
             <div className=" w-full h-full flex justify-between flex-col ">
               <div>
-
-              <img
-                src="/assets/test.png"
-                className="newsImage max-w-[45%] float-left mr-4 "
-                alt="test block"
+                <img
+                  src="/assets/test.png"
+                  className="newsImage max-w-[45%] float-left mr-4 "
+                  alt="test block"
                 />
-              <p className="newsContent text-justify">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus
-                numquam quaerat ipsnsectetur adipisicing elit.
-                Aliquam neque tempore cupiditate, asperiores doloribus
-                co Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.nsequatur ab inventore dolorem it. Tempore, nobis.modi earum
-                optio quia ut, quis ectus quidem pariatur recusandae odio rem?
-              </p>
-                </div>
+                <p className="newsContent text-justify">
+                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus
+                  numquam quaerat ipsnsectetur adipisicing elit. Aliquam neque
+                  tempore cupiditate, asperiores doloribus co Lorem ipsum dolor
+                  sit amet. Lorem ipsum dolor sit amet.nsequatur ab inventore
+                  dolorem it. Tempore, nobis.modi earum optio quia ut, quis
+                  ectus quidem pariatur recusandae odio rem?
+                </p>
+              </div>
               <div className="advertisement w-full border-2 p-0 mt-1 flex items-center justify-center">
                 <img
                   src="/assets/advert.svg"

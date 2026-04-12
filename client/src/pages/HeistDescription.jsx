@@ -101,7 +101,7 @@ function idsMatch(a, b) {
 
 export default function HeistDescription() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams();  
   const location = useLocation();
   const stateHeist = location.state?.heist;
 

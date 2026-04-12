@@ -57,7 +57,7 @@ function VoteGroup({ postId, initialVote = 0, onScoreChange }) {
   };
 
   return (
-    <div className="flex items-center gap-[0.5cqi]">
+    <div className="flex items-center gap-[0.5cqi]" onClick={e => e.stopPropagation()}>
       <div style={{ width: "3.3cqi" }}>
         <Upvote 
           onClick={() => handleVote(1)}
@@ -93,6 +93,7 @@ export default function HackNiteNewspaperPoster({
   topPostUserVote,
   bottomPostId,
   bottomPostUserVote,
+  bottomPortraitSrc,
 }) {
   const [topScore, setTopScore] = useState(Number(topBountyScore) || 0);
   const [bottomScore, setBottomScore] = useState(Number(bottomBountyScore) || 0);
@@ -227,9 +228,32 @@ export default function HackNiteNewspaperPoster({
         <div className="absolute bg-[#040404]" style={{ left: "0.4%", top: "64.4%", height: "0.11%", width: "97.4%" }} />
         <div className="absolute bg-[#040404]" style={{ left: "0.2%", top: "58.6%", height: "40.7%", width: "0.13%" }} />
 
+        {/* Bottom Portrait — mirrors top section */}
+        {bottomPortraitSrc ? (
+          <img
+            src={bottomPortraitSrc}
+            alt=""
+            className="absolute box-border border-[0.15cqi] border-black object-cover select-none"
+            style={{ left: "1.37%", top: "66.7%", width: "40.5%", height: "23%" }}
+            draggable={false}
+          />
+        ) : null}
+
+        {/* Bottom divider line — only shown when image is present, mirrors top */}
+        {bottomPortraitSrc && (
+          <div className="absolute bg-[#040404]" style={{ left: "43%", top: "64.7%", height: "25.5%", width: "0.13%" }} />
+        )}
+
         <p
           className="absolute m-0 max-w-none whitespace-pre-wrap p-0 font-['Fahkwang'] font-normal text-black"
-          style={{ left: "1.7%", top: "66.7%", width: "96.3%", height: "33.2%", fontSize: "2.6cqi", lineHeight: "1.35" }}
+          style={{
+            left: bottomPortraitSrc ? "44%" : "1.7%",
+            top: "66.7%",
+            width: bottomPortraitSrc ? "51.6%" : "96.3%",
+            height: "23%",
+            fontSize: "2.6cqi",
+            lineHeight: "1.35"
+          }}
         >
           {bodyFullWidth}
         </p>

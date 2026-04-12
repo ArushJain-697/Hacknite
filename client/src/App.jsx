@@ -14,8 +14,7 @@ import Network from "./pages/Network";
 import AddPost from "./pages/AddPost";
 import EditProfile from "./pages/EditProfile";
 import HeistDescription from "./pages/HeistDescription";
-import ApprovalInterface from "./components/ApprovalInterface";
-import WantedProfileFrame from "./components/WantedProfileFrame";
+import MyHeists from "./pages/My_Heists";
 import MyConnections from "./pages/MyConnections";
 const dummyProfiles = [
   {
@@ -101,9 +100,7 @@ const BlackFlash = ({ isNavigating }) => {
           <Route path="/connections" element={<MyConnections />} />
           <Route path="/add_post" element={<AddPost />} />
           <Route path="/edit_profile" element={<EditProfile />} />
-          <Route path="/heist_description/:id" element={<HeistDescription />} />
-          <Route path="/working" element={<ApprovalInterface initialProfiles={dummyProfiles} />} />
-
+          <Route path="/my_heists" element={<MyHeists />} />
         </Routes>
       </AnimatePresence>
 
