@@ -21,6 +21,12 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
+    const [[{ count: connection_count }]] = await pool.query(
+      `SELECT COUNT(*) as count FROM connections
+       WHERE (requester_id = ? OR receiver_id = ?) AND status = 'accepted'`,
+      [userId, userId]
+    );
+
     const profile = rows[0];
     const parseMaybeJson = (val, fallback) => {
       if (val == null) return fallback;
@@ -33,6 +39,7 @@ exports.getProfile = async (req, res) => {
         ...profile,
         skills: parseMaybeJson(profile.skills, []),
         languages: parseMaybeJson(profile.languages, []),
+        connection_count,
       }
     });
   } catch (error) {
