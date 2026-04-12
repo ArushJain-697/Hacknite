@@ -9,7 +9,7 @@ import WantedPoster from "../components/WantedPoster.jsx";
 import { useNavigate } from "react-router-dom";
 import HackNiteNewspaperPoster from "../components/HackNiteNewspaperPoster";
 import WantedProfileFrame from "../components/WantedProfileFrame";
-
+import newsPaperBG from '../../public/assets/Newspaper.png'
 // ==========================================
 // CONFIGURATION: FLIPBOOK ASPECT RATIO
 // Modify these exact values to change the dimensions of the newspaper pages natively.
@@ -122,15 +122,14 @@ export default function Newspaper() {
   ];
 
   if (isOddLength) {
-    pagesArray.push(
-      <Page
-        key="odd-pad"
-        front={false}
-        posts={[]}
-        pageNum={displayPages.length + 1}
-      />,
-    );
-  }
+  pagesArray.push(
+    <div
+      key="last-image"
+      className="demoPage bg-cover bg-center"
+      style={{ backgroundImage: `url(${newsPaperBG})` }}
+    />
+  );
+}
 
   return (
     <CinematicPage>
@@ -189,6 +188,7 @@ export default function Newspaper() {
             startZIndex={30}
             maxShadowOpacity={0.3}
             disableFlipByClick={!isOpened}
+            image={newsPaperBG}
           >
             {pagesArray}
           </HTMLFlipBook>
@@ -221,15 +221,46 @@ export default function Newspaper() {
           />
 
           {showWantedProfile && (
-            <button
-              className="pointer-events-auto absolute -bottom-24 left-[40%] -translate-x-1/2 bg-stone-900 bg-opacity-95 text-[#f0e8d0] px-8 py-3 font-bold tracking-[0.2em] text-3xl border-8 border-amber-300 hover:bg-stone-800 hover:scale-102 shadow-[0_10px_30px_black]"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate("/edit_profile");
-              }}
-            >
-              EDIT PROFILE
-            </button>
+            <div className="pointer-events-auto absolute -bottom-24 left-1/2 -translate-x-1/2 flex gap-4">
+              {/* EDIT BUTTON */}
+              <button
+                className="bg-stone-900 bg-opacity-95 text-[#f0e8d0] px-8 py-3 font-bold tracking-[0.2em] text-3xl border-8 border-amber-300 hover:bg-stone-800 hover:scale-102 shadow-[0_10px_30px_black]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/edit_profile");
+                }}
+              >
+                EDIT PROFILE
+              </button>
+
+              {/* LOGOUT BUTTON */}
+              <button
+                className="bg-red-800 bg-opacity-95 text-[#f0e8d0] px-8 py-3 font-bold tracking-[0.2em] text-3xl border-8 border-red-400 hover:bg-red-700 hover:scale-102 shadow-[0_10px_30px_black]"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const res = await fetch(
+                      "https://api.sicari.works/api/auth/logout",
+                      {
+                        method: "POST",
+                        credentials: "include",
+                      },
+                    );
+
+                    if (res.ok) {
+                      localStorage.clear(); // optional
+                      navigate("/");
+                    } else {
+                      console.error("Logout failed");
+                    }
+                  } catch (err) {
+                    console.error("Error logging out:", err);
+                  }
+                }}
+              >
+                LOGOUT
+              </button>
+            </div>
           )}
         </div>
 
@@ -269,8 +300,17 @@ export default function Newspaper() {
     </CinematicPage>
   );
 }
-
 function SinglePage({ posts = [], pageNum = 1 }) {
+  // 👉 If this is the padded/empty page, show newspaper background
+  if (!posts || posts.length === 0) {
+    return (
+      <div
+        className="w-full h-full bg-cover bg-center"
+        style={{ backgroundImage: `url(${newsPaperBG})` }}
+      />
+    );
+  }
+
   const topPost = posts[0] || {};
   const bottomPost = posts[1] || {};
 
@@ -281,7 +321,7 @@ function SinglePage({ posts = [], pageNum = 1 }) {
         pageLabel={`Page : ${pageNum}`}
         topPostId={topPost._id || topPost.id}
         topPostUserVote={topPost.userVote || topPost.vote}
-        headlineTop={topPost.title || topPost.heading || "REDACTED"}
+        headlineTop={topPost.title || topPost.heading || ""}
         bodyColumn={
           topPost.content ||
           topPost.body ||
@@ -298,7 +338,7 @@ function SinglePage({ posts = [], pageNum = 1 }) {
         }
         bottomPostId={bottomPost._id || bottomPost.id}
         bottomPostUserVote={bottomPost.userVote || bottomPost.vote}
-        headlineBottom={bottomPost.title || bottomPost.heading || "REDACTED"}
+        headlineBottom={bottomPost.title || bottomPost.heading || ""}
         bodyFullWidth={
           bottomPost.content ||
           bottomPost.body ||
@@ -311,7 +351,6 @@ function SinglePage({ posts = [], pageNum = 1 }) {
     </div>
   );
 }
-
 function FrontPage() {
   return (
     <div className="page p-3 bg-[url('/assets/Newspaper.png')] bg-cover bg-center h-full w-full flex items-center flex-col overflow-hidden">

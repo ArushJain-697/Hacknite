@@ -204,7 +204,7 @@ export default function FrontPageTerminal() {
         startTypedAnimation(["<br/>CREATING IDENTITY... ^800 "]);
 
         // Pre-flight logout clearance
-        fetch(`${apiBaseUrl}/api/auth/logout`, { credentials: "include" })
+        fetch(`${apiBaseUrl}/api/auth/logout`, { method:"POST",credentials: "include" })
           .catch(() => {}) // gracefully consume logout ping failures silently
           .finally(() => {
             fetch(`${apiBaseUrl}/api/auth/register`, {
