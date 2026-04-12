@@ -6,7 +6,6 @@ const parseMaybeJson = (value, fallback) => {
   try { return JSON.parse(value); } catch { return fallback; }
 };
 
-// GET /api/profile/:username
 exports.getPublicProfile = async (req, res) => {
   try {
     const viewerId = req.user.sub;
@@ -30,14 +29,12 @@ exports.getPublicProfile = async (req, res) => {
 
     const user = rows[0];
 
-    // Connection count
     const [[{ count: connection_count }]] = await pool.query(
       `SELECT COUNT(*) as count FROM connections
        WHERE (requester_id = ? OR receiver_id = ?) AND status = 'accepted'`,
       [user.id, user.id]
     );
 
-    // Connection status with viewer
     let connection_status = "none";
     let connection_id = null;
 
@@ -85,6 +82,24 @@ exports.getPublicProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching public profile:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const [users] = await pool.query(
+      `SELECT 
+        u.id, u.username, u.role,
+        sp.name, sp.title, sp.clearance_level, sp.photo_url
+       FROM users u
+       LEFT JOIN sicario_profiles sp ON sp.user_id = u.id
+       ORDER BY u.created_at DESC`
+    );
+
+    return res.json({ users });
+  } catch (error) {
+    console.error("Error fetching users:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
