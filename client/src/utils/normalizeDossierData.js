@@ -53,3 +53,27 @@ export function normalizeDossierData(raw) {
       : raw.crew,
   };
 }
+
+/** Parse crew money share for charts (HeistSlideDeck). */
+export function crewMoneyPercent(member) {
+  if (!member || typeof member !== "object") return 0;
+  const n = Number(
+    firstNonEmpty(member.moneyShare, member.share, member.money_share)
+  );
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Map dossier threat label to numeric level for UI. */
+export function crewThreatToLevel(member) {
+  if (!member || typeof member !== "object") return 4;
+  const t = String(
+    firstNonEmpty(member.threatLevel, member.threat, "")
+  ).toUpperCase();
+  if (t.includes("EXTREME")) return 5;
+  if (t.includes("HIGH")) return 4;
+  if (t.includes("MEDIUM")) return 3;
+  if (t.includes("LOW")) return 1;
+  const n = parseInt(t, 10);
+  if (Number.isFinite(n) && n >= 1 && n <= 5) return n;
+  return 4;
+}

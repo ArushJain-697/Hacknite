@@ -19,6 +19,12 @@ import {
   Zap,
   CheckCircle2,
 } from "lucide-react";
+import { useDossier } from "./DossierContext";
+import {
+  normalizeDossierData,
+  crewMoneyPercent,
+  crewThreatToLevel,
+} from "../utils/normalizeDossierData";
 
 let applySoundCtx = null;
 /** Mechanical latch + brief seal tone for the roster Apply control */
@@ -154,7 +160,7 @@ const MISSION_DATA = {
       { label: "Surveillance Hours", value: "2,160", icon: Clock },
       { label: "Vulnerabilities Found", value: "3", icon: AlertTriangle },
     ],
-    image: "/surveillance_01.png",
+    image: "/assets/surveillance_01.png",
     imageCaption: "TGT-NORTH — 23:45:12 GMT",
   },
   execution: {
@@ -170,7 +176,7 @@ const MISSION_DATA = {
       { time: "00:47", event: "Countermeasures deployed — logs rewritten", critical: false },
       { time: "00:58", event: "Extraction complete — all connections severed", critical: true },
     ],
-    image: "/surveillance_02.png",
+    image: "/assets/surveillance_02.png",
     imageCaption: "CCTV-SR4 — 02:37:14 UTC",
   },
   extraction: {
@@ -186,7 +192,7 @@ const MISSION_DATA = {
       { cmd: "> surveillance archives:", status: "OVERWRITTEN" },
       { cmd: "> status:", status: "GHOST PROTOCOL COMPLETE" },
     ],
-    image: "/surveillance_03.png",
+    image: "/assets/surveillance_03.png",
     imageCaption: "SAT-RECON — 34.7210° N",
   },
   crew: [
@@ -1048,15 +1054,18 @@ function CrewCard({ member, idx }) {
 // ════════════════════════════════════════════════════════
 //  STEP 4 — THE ROSTER / CREW & THE CUT
 // ════════════════════════════════════════════════════════
-function StepRoster({ data }) {
+function StepRoster({ data, showApply = true, onApply, applying = false }) {
   const applyBtnControls = useAnimation();
   const [shimmerKey, setShimmerKey] = useState(0);
   const [applyAcknowledged, setApplyAcknowledged] = useState(false);
 
   const handleApply = async () => {
+    if (applying) return;
     playApplySound();
-    setApplyAcknowledged(true);
     setShimmerKey((k) => k + 1);
+    if (!onApply) {
+      setApplyAcknowledged(true);
+    }
     await applyBtnControls.start({
       scale: [1, 1.08, 0.97, 1],
       boxShadow: [
@@ -1066,6 +1075,9 @@ function StepRoster({ data }) {
       ],
       transition: { duration: 0.52, ease: [0.34, 1.25, 0.64, 1] },
     });
+    if (onApply) {
+      await onApply();
+    }
   };
 
   return (
@@ -1142,64 +1154,78 @@ function StepRoster({ data }) {
       </motion.div>
 
       {/* Apply — final commit control */}
-      <motion.div
-        className="mt-12 w-full max-w-lg mx-auto flex flex-col items-center gap-5"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.35, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <motion.button
-          type="button"
-          onClick={handleApply}
-          animate={applyBtnControls}
-          initial={{
-            scale: 1,
-            y: 0,
-            boxShadow: "0 8px 28px rgba(239, 68, 68, 0.35)",
-          }}
-          whileHover={{
-            y: -3,
-            boxShadow: "0 14px 44px rgba(239, 68, 68, 0.42), 0 0 0 1px rgba(248, 113, 113, 0.25)",
-            transition: { type: "spring", stiffness: 400, damping: 24 },
-          }}
-          whileTap={{ scale: 0.9, transition: { type: "spring", stiffness: 600, damping: 22 } }}
-          className="relative overflow-hidden rounded-lg px-12 sm:px-16 py-4 text-xs sm:text-sm font-black tracking-[0.42em] uppercase text-white border border-red-500/50 bg-gradient-to-b from-red-600 via-red-700 to-red-950 cursor-pointer select-none"
-          style={{ fontFamily: FONT.mono }}
+      {showApply ? (
+        <motion.div
+          className="mt-12 w-full max-w-lg mx-auto flex flex-col items-center gap-5"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.35, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          {shimmerKey > 0 ? (
-            <motion.span
-              key={shimmerKey}
-              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-              initial={{ x: "110%" }}
-              animate={{ x: "-110%" }}
-              transition={{ duration: 0.48, ease: "easeInOut" }}
-            />
-          ) : null}
-          <span className="relative z-[1]">Apply</span>
-        </motion.button>
-
-        <AnimatePresence mode="wait">
-          {applyAcknowledged ? (
-            <motion.div
-              key="ok"
-              initial={{ opacity: 0, y: 6, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ type: "spring", stiffness: 380, damping: 28 }}
-              className="flex items-center gap-2.5 text-emerald-400/95 text-[10px] sm:text-xs tracking-[0.2em] uppercase"
-              style={{ fontFamily: FONT.mono }}
-            >
+          <motion.button
+            type="button"
+            onClick={handleApply}
+            disabled={applying}
+            animate={applyBtnControls}
+            initial={{
+              scale: 1,
+              y: 0,
+              boxShadow: "0 8px 28px rgba(239, 68, 68, 0.35)",
+            }}
+            whileHover={
+              applying
+                ? {}
+                : {
+                    y: -3,
+                    boxShadow:
+                      "0 14px 44px rgba(239, 68, 68, 0.42), 0 0 0 1px rgba(248, 113, 113, 0.25)",
+                    transition: { type: "spring", stiffness: 400, damping: 24 },
+                  }
+            }
+            whileTap={
+              applying
+                ? {}
+                : { scale: 0.9, transition: { type: "spring", stiffness: 600, damping: 22 } }
+            }
+            className={`relative overflow-hidden rounded-lg px-12 sm:px-16 py-4 text-xs sm:text-sm font-black tracking-[0.42em] uppercase text-white border border-red-500/50 bg-gradient-to-b from-red-600 via-red-700 to-red-950 select-none ${
+              applying ? "opacity-60 cursor-wait" : "cursor-pointer"
+            }`}
+            style={{ fontFamily: FONT.mono }}
+          >
+            {shimmerKey > 0 ? (
               <motion.span
-                animate={{ rotate: [0, -8, 8, 0] }}
-                transition={{ duration: 0.5, delay: 0.05 }}
+                key={shimmerKey}
+                className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                initial={{ x: "110%" }}
+                animate={{ x: "-110%" }}
+                transition={{ duration: 0.48, ease: "easeInOut" }}
+              />
+            ) : null}
+            <span className="relative z-[1]">{applying ? "Applying…" : "Apply"}</span>
+          </motion.button>
+
+          <AnimatePresence mode="wait">
+            {applyAcknowledged ? (
+              <motion.div
+                key="ok"
+                initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                className="flex items-center gap-2.5 text-emerald-400/95 text-[10px] sm:text-xs tracking-[0.2em] uppercase"
+                style={{ fontFamily: FONT.mono }}
               >
-                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.25} />
-              </motion.span>
-              Dossier applied to active record
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </motion.div>
+                <motion.span
+                  animate={{ rotate: [0, -8, 8, 0] }}
+                  transition={{ duration: 0.5, delay: 0.05 }}
+                >
+                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.25} />
+                </motion.span>
+                Dossier applied to active record
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </motion.div>
+      ) : null}
     </div>
   );
 }
@@ -1207,20 +1233,20 @@ function StepRoster({ data }) {
 // ════════════════════════════════════════════════════════
 //  MAIN COMPONENT
 // ════════════════════════════════════════════════════════
-import { useDossier } from "./context/DossierContext";
-import {
-  normalizeDossierData,
-  crewMoneyPercent,
-  crewThreatToLevel,
-} from "./utils/normalizeDossierData";
-
-export default function HeistSlideDeck() {
+export default function HeistSlideDeck({
+  formData = null,
+  showApply = true,
+  onApply,
+  applying = false,
+}) {
   useGlobalSetup();
 
   const { dossierData } = useDossier();
+  const source = formData ?? dossierData;
+
   const mappedData = useMemo(() => {
-    if (!dossierData) return MISSION_DATA;
-    const d = normalizeDossierData(dossierData);
+    if (!source) return MISSION_DATA;
+    const d = normalizeDossierData(source);
     const quoteText = (d.quotes || "").toString().trim();
     return {
       codename: d.operationName || 'PLACEHOLDER',
@@ -1243,7 +1269,7 @@ export default function HeistSlideDeck() {
           { label: "Surveillance Hours", value: d.intelSurveillanceHours || '...', icon: Clock },
           { label: "Vulnerabilities Found", value: d.intelVulnerabilities || '...', icon: AlertTriangle },
         ],
-        image: d.phase1Photo || "/surveillance_01.png",
+        image: d.phase1Photo || "/assets/surveillance_01.png",
         imageCaption: "RECON - INITIATED",
       },
       execution: {
@@ -1251,7 +1277,7 @@ export default function HeistSlideDeck() {
         subtitle: "58 seconds. Zero margin for error.",
         description: d.executionDescription || 'PLACEHOLDER',
         timeline: d.timeline && d.timeline.length > 0 ? d.timeline.map((t, i) => ({ time: t.time || '00:00', event: t.description || '...', critical: i % 2 === 0 })) : MISSION_DATA.execution.timeline,
-        image: d.executionPhoto || "/surveillance_02.png",
+        image: d.executionPhoto || "/assets/surveillance_02.png",
         imageCaption: "EXECUTION - INGRESS",
       },
       extraction: {
@@ -1259,7 +1285,7 @@ export default function HeistSlideDeck() {
         subtitle: "We don't escape. We evaporate.",
         description: d.extractionPlan || 'PLACEHOLDER',
         terminalLines: MISSION_DATA.extraction.terminalLines,
-        image: d.extractionPhoto || "/surveillance_03.png",
+        image: d.extractionPhoto || "/assets/surveillance_03.png",
         imageCaption: "EXTRACTION - EGRESS",
       },
       crew: d.crew && d.crew.length > 0 ? d.crew.map(c => ({
@@ -1273,7 +1299,7 @@ export default function HeistSlideDeck() {
       threatLevel: 4,
       maxThreat: 5,
     };
-  }, [dossierData]);
+  }, [source]);
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -1344,10 +1370,18 @@ export default function HeistSlideDeck() {
       case 1: return <StepRecon key="r" data={mappedData} />;
       case 2: return <StepExecution key="e" data={mappedData} />;
       case 3: return <StepExtraction key="x" data={mappedData} />;
-      case 4: return <StepRoster key="c" data={mappedData} />;
+      case 4: return (
+          <StepRoster
+            key="c"
+            data={mappedData}
+            showApply={showApply}
+            onApply={onApply}
+            applying={applying}
+          />
+        );
       default: return null;
     }
-  }, [step, mappedData]);
+  }, [step, mappedData, showApply, onApply, applying]);
 
   return (
     <div className="relative h-screen text-white overflow-hidden flex flex-col" style={{ background: "#09090b", fontFamily: FONT.sans }}>

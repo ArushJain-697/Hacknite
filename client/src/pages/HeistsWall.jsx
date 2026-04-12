@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 import HackNiteCard from "../components/HackNiteCard";
 import CinematicPage from "../components/CinematicPage";
+import "../styles/HeistsWall.css";
 
 const linearTransition = {
   type: "tween",
@@ -202,23 +203,28 @@ const HorizontalGallery = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={linearTransition}
-              className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer bg-black/95"
+              className="fixed inset-0 z-[200] flex cursor-pointer items-center justify-center bg-black/95 px-4 py-8"
               onClick={() => setSelectedItem(null)}
             >
-              <div className="relative flex flex-col items-center justify-center p-[2rem]">
+              <div
+                className="flex max-h-[100dvh] w-full max-w-[min(100%,420px)] flex-col items-center gap-8 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <motion.div
                   layoutId={`card-${selectedItem.uniqueIndex}`}
                   transition={linearTransition}
-                  className="cursor-default will-change-transform shadow-[0_0_5rem_rgba(0,0,0,1)] scale-[1.2] md:scale-[1.5]"
-                  onClick={(e) => e.stopPropagation()}
+                  className="cursor-default shadow-[0_0_5rem_rgba(0,0,0,1)]"
                 >
-                  <HackNiteCard
-                    title={selectedItem._title}
-                    hashtagLines={selectedItem._hashtags}
-                  />
+                  <div className="heist-wall-modal-card">
+                    <HackNiteCard
+                      title={selectedItem._title}
+                      hashtagLines={selectedItem._hashtags}
+                    />
+                  </div>
                 </motion.div>
 
                 <motion.button
+                  type="button"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
@@ -232,14 +238,14 @@ const HorizontalGallery = () => {
                       });
                     }
                   }}
-                  className="absolute left-1/2 -translate-x-1/2 -bottom-[9rem] bg-[#2c1303] text-[#f0e8d0] font-['Bungee'] py-[0.75rem] px-[2.5rem] shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:scale-105 active:scale-95 transition-transform"
+                  className="shrink-0 bg-[#2c1303] text-[#f0e8d0] font-['Bungee'] py-[0.75rem] px-[2.5rem] shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:scale-105 active:scale-95 transition-transform"
                   style={{
                     fontSize: 20,
                     border: "2px solid black",
                     letterSpacing: "1px",
                   }}
                 >
-                  {role === "fixer" ? "SEE APPLICANTS" : "APPLY"}
+                  {role === "fixer" ? "SEE APPLICANTS" : "VIEW"}
                 </motion.button>
               </div>
             </motion.div>

@@ -11,4 +11,10 @@ export function DossierProvider({ children }) {
   )
 }
 
-export const useDossier = () => useContext(DossierContext)
+export function useDossier() {
+  const ctx = useContext(DossierContext);
+  if (!ctx) {
+    return { dossierData: null, setDossierData: () => {} };
+  }
+  return ctx;
+}
