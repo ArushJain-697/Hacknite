@@ -150,6 +150,19 @@ async function initDatabase() {
       FOREIGN KEY (sicario_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS connections (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      requester_id INT NOT NULL,
+      receiver_id INT NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY unique_connection (requester_id, receiver_id),
+      FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
 }
 
 module.exports = { pool, initDatabase };

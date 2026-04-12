@@ -8,6 +8,8 @@ const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 const sicarioRoutes = require("./routes/sicarioRoutes");
 const fixerRoutes = require("./routes/fixerRoutes");
+const connectionRoutes = require("./routes/connectionRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
@@ -68,11 +70,16 @@ app.get("/api", (_req, res) => {
 const apiRouter = express.Router();
 apiRouter.use("/auth", authRoutes);
 apiRouter.use("/posts", postRoutes);
-
 apiRouter.use("/sicario", sicarioRoutes);
 apiRouter.use("/fixer", fixerRoutes);
+apiRouter.use("/connections", connectionRoutes);
+apiRouter.use("/profile", userRoutes);
 
 app.use("/api", apiRouter);
+
+app.use((req, res) => {
+  res.status(404).json({ message: "Endpoint not found. Please check the API documentation." });
+});
 
 app.use((err, _req, res, _next) => {
   if (err && err.message === "Not allowed by CORS") {
