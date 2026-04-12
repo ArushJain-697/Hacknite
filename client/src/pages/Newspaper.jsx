@@ -393,7 +393,6 @@ function FrontPage() {
                   alt="advertisement for front page"
                   className=" m-0 w-[80%]"
                 />
-                hi
               </div>
             </div>
           </div>
