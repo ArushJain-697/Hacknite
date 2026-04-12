@@ -33,7 +33,17 @@ const PolaroidCard = forwardRef(({ item, index, scrollRef, onCenterInView }, ref
 
       {/* Photo Area */}
       <div className="relative w-full h-[220px] bg-gray-200 overflow-hidden shadow-inner">
-         <img src={item.image} alt={item.name} className="w-full h-full object-cover sepia-[30%] contrast-[1.1] group-hover:sepia-0 transition-all duration-500" />
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.name || ""}
+            className="w-full h-full object-cover sepia-[30%] contrast-[1.1] group-hover:sepia-0 transition-all duration-500"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-stone-300 text-stone-600 text-sm px-2 text-center">
+            No photo
+          </div>
+        )}
       </div>
       
       {/* Name Area */}

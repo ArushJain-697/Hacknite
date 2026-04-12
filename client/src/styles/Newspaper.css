@@ -103,3 +103,13 @@ p {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.5) transparent;
 }
+
+/* FindConnections profile modal — hide all scrollbars (including WantedProfileFrame skills) */
+.find-connections-profile-modal,
+.find-connections-profile-modal * {
+  scrollbar-width: none;
+}
+.find-connections-profile-modal *::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

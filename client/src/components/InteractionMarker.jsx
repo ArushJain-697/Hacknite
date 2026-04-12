@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function InteractionMarker({ onClick, className = "", style = {}, baseScale = 1, forceVisible = false, text = "OPEN" }) {
+export default function InteractionMarker({ onClick, className = "", style = {}, baseScale = 1, forceVisible = false, text = "OPEN", connect=false, kokila=false }) {
   // If forceVisible is provided, we just use local classes instead of group-hover
   const opacityClass = forceVisible ? "opacity-90" : "opacity-0 group-hover:opacity-90";
   // The user requested growing from small to large
@@ -44,12 +44,20 @@ export default function InteractionMarker({ onClick, className = "", style = {},
         />
 
         {/* Dynamic Text */}
-        <span 
+         {connect ? <span 
+          className="absolute inset-0 flex justify-center items-center tracking-[0.2em] font-mono font-bold text-[#e8dcc8] pointer-events-none text-center leading-none"
+          style={{ fontSize: `${adjustedFontSize*0.7}px` }}
+          >
+          
+          {text.toUpperCase()}
+        </span> : <span 
           className="absolute inset-0 flex justify-center items-center tracking-[0.2em] font-mono font-bold text-[#e8dcc8] pointer-events-none text-center leading-none"
           style={{ fontSize: `${adjustedFontSize}px` }}
-        >
+          >
+          
           {text.toUpperCase()}
-        </span>
+        </span>} 
+        
       </div>
     </div>
   );

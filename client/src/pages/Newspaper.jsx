@@ -169,7 +169,7 @@ export default function Newspaper() {
           {!isOpened && (
              <InteractionMarker 
                className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
-               baseScale={1.5} 
+               baseScale={1.0} 
                onClick={() => setIsOpened(true)} 
                text="READ"
              />
@@ -229,9 +229,10 @@ export default function Newspaper() {
           {!showWantedProfile && (
              <InteractionMarker 
                className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
-               baseScale={4.0}
+               baseScale={1.0}
                onClick={() => setShowWantedProfile(true)} 
                text="READ"
+               kokila={true}
              />
           )}
 
@@ -294,18 +295,19 @@ export default function Newspaper() {
             text="HEISTS"
           />
         </div>
-        <div className="group absolute left-20 z-19 top-15 rotate-0 max-w-60 box-content">
+        <div className="group absolute left-40 z-19 top-15 rotate-0 max-w-40 box-content">
           <img
-            src="/assets/handshake.png"
+            src="/assets/book.png"
             alt="connections"
-            onClick={() => navigate("/connections")}
+            onClick={() => navigate("/find_connections")}
             draggable={false}
             className="w-full cursor-pointer"
           />
           <InteractionMarker 
             className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
-            baseScale={1.7} 
-            onClick={() => navigate("/connections")} 
+            baseScale={1.0} 
+            onClick={() => navigate("/find_connections")} 
+            connect={true}
             text="CONNECTIONS"
           />
         </div>

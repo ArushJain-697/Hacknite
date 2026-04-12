@@ -17,6 +17,8 @@ import EditProfile from "./pages/EditProfile";
 import HeistDescription from "./pages/HeistDescription";
 import MyHeists from "./pages/My_Heists";
 import MyConnections from "./pages/MyConnections";
+import FindConnections from "./pages/FindConnections";
+import ConnectionRequests from "./pages/ConnectionRequests";
 const dummyProfiles = [
   {
     id: 1,
@@ -99,6 +101,8 @@ const BlackFlash = ({ isNavigating }) => {
           <Route path="/Heists" element={<HeistsWall />} />
           <Route path="/Network" element={<Network />} />
           <Route path="/connections" element={<MyConnections />} />
+          <Route path="/find_connections" element={<FindConnections />} />
+          <Route path="/connection_requests" element={<ConnectionRequests />} />
           <Route path="/add_post" element={<AddPost />} />
           <Route path="/add_heist" element={<AddHeist />} />
           <Route path="/edit_profile" element={<EditProfile />} />
