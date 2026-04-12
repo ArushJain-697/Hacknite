@@ -6,6 +6,8 @@ import "../scripts/fittext.js";
 import EvidenceGun from "../components/EvidenceGun.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import WantedPoster from "../components/WantedPoster.jsx";
+import { useNavigate } from "react-router-dom";
+
 // 1. MOVED OUTSIDE: This prevents React from destroying the pages on every click!
 const Page = React.forwardRef((props, ref) => {
   return props.front === false ? (
@@ -20,6 +22,7 @@ const Page = React.forwardRef((props, ref) => {
 });
 
 export default function Newspaper() {
+  const navigate = useNavigate();
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth * 0.35,
     height: window.innerHeight * 0.85,
@@ -127,8 +130,9 @@ export default function Newspaper() {
         <img
           src="/assets/MagnifyingGlass.png"
           alt="Search"
+          onClick={() => navigate("/Heists")}
           draggable={false}
-          className="magGlass absolute right-20 z-19 bottom-15 rotate-130 max-w-50 box-content "
+          className="magGlass absolute right-20 z-19 bottom-15 rotate-130 max-w-50 box-content cursor-pointer hover:scale-110 transition-transform duration-300"
         />
 
         <img
