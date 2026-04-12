@@ -5,6 +5,7 @@ import { FreeMode, Mousewheel } from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/free-mode";
+import { useNavigate } from "react-router-dom";
 
 import HackNiteCard from "../components/HackNiteCard";
 import CinematicPage from "../components/CinematicPage";
@@ -18,17 +19,30 @@ const linearTransition = {
 const HorizontalGallery = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [heists, setHeists] = useState([]);
+  const [role, setRole] = useState("sicario");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("https://api.sicari.works/api/sicario/heists", {
-      credentials: "include",
-    })
+    // 1. Check user role
+    fetch("https://api.sicari.works/api/auth/me", { credentials: "include" })
+      .then((res) => res.json())
+      .then((authData) => {
+        const userRole = authData?.user?.role || "sicario";
+        setRole(userRole);
+        
+        // 2. Fetch appropriate heists
+        const url = userRole === "fixer" 
+          ? "https://api.sicari.works/api/fixer/heists" 
+          : "https://api.sicari.works/api/sicario/heists";
+
+        return fetch(url, { credentials: "include" });
+      })
       .then((res) => res.json())
       .then((data) => {
         const arr = Array.isArray(data) ? data : data.heists || data.data || [];
         setHeists(arr);
       })
-      .catch((err) => console.error("Error fetching heists:", err));
+      .catch((err) => console.error("Error fetching heists data:", err));
   }, []);
 
   const infiniteHeists = heists.length > 0 ? [...heists, ...heists, ...heists] : [];
@@ -160,16 +174,22 @@ const HorizontalGallery = () => {
                     hashtagLines={selectedItem._hashtags}
                   />
                 </motion.div>
-
-                <motion.p
+                
+                {/* Independent Unscaled Interactive Button outside the card */}
+                <motion.button
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={linearTransition}
-                  className="absolute left-0 right-0 -bottom-[10rem] text-center text-[#f4f4f4] text-[1.5rem] font-serif tracking-widest drop-shadow-2xl"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/heist_description", { state: { heist: selectedItem } });
+                  }}
+                  className="absolute left-1/2 -translate-x-1/2 -bottom-[9rem] bg-[#2c1303] text-[#f0e8d0] font-['Bungee'] py-[0.75rem] px-[2.5rem] shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:scale-105 active:scale-95 transition-transform"
+                  style={{ fontSize: 20, border: "2px solid black", letterSpacing: "1px" }}
                 >
-                  {selectedItem.description || ""}
-                </motion.p>
+                  {role === "fixer" ? "SEE APPLICANTS" : "APPLY"}
+                </motion.button>
               </div>
             </motion.div>
           )}

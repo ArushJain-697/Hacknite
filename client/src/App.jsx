@@ -47,7 +47,7 @@ const BlackFlash = ({ isNavigating }) => {
           <Route path="/" element={<FrontPageTerminal />} />
           <Route path="/feed" element={<Newspaper />} />
           <Route path="/Heists" element={<HeistsWall />} />
-          <Route path="/working" element={<HeistsWall />} />
+          <Route path="/working" element={<WantedPoster />} />
           <Route path="/yugpo" element={<HackNiteCard />} />
           <Route path="/Network" element={<Network />} />
           <Route path="/hacknite" element={<HackNiteNewspaperPoster />} />

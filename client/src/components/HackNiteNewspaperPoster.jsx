@@ -1,47 +1,76 @@
-import React from "react";
+import React, { useState } from "react";
 
-/**
- * Figma: node 128:657 — "Component 1" (newspaper / dossier layout, 750×982).
- * Typography and layout match the file; pass `paperImageSrc` / `portraitSrc` for exported fills.
- */
-
-function QuoteLeft({ className }) {
+function Upvote({ className, onClick }) {
   return (
-    <svg
-      className={className}
-      width={25}
-      height={38}
-      viewBox="0 0 24.5 38"
-      fill="none"
-      aria-hidden
-    >
-      <path
-        d="M0 0h24.5M9 10v28M17 10v28M8 37.5h9"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="square"
-      />
-    </svg>
+    <img 
+      src="/assets/upvote.svg" 
+      onClick={onClick}
+      className={`cursor-pointer hover:scale-125 transition-transform ${className || ""}`} 
+      style={{ width: "100%", height: "auto" }}
+      alt="Upvote" 
+    />
   );
 }
 
-function QuoteRight({ className }) {
+function Downvote({ className, onClick }) {
   return (
-    <svg
-      className={className}
-      width={25}
-      height={38}
-      viewBox="0 0 24.5 38"
-      fill="none"
-      aria-hidden
-    >
-      <path
-        d="M0 28h24.5M7.5 0v28M15.5 0v28M7.5.5h9"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="square"
-      />
-    </svg>
+    <img 
+      src="/assets/upvote.svg" 
+      onClick={onClick}
+      className={`cursor-pointer hover:scale-125 transition-transform rotate-180 ${className || ""}`} 
+      style={{ width: "100%", height: "auto" }}
+      alt="Downvote" 
+    />
+  );
+}
+
+function VoteGroup({ postId, initialVote = 0, onScoreChange }) {
+  const [vote, setVote] = useState(Number(initialVote) || 0);
+
+  const handleVote = async (value) => {
+    if (!postId) return;
+    
+    let newVote;
+    let scoreDelta = 0;
+    
+    if (vote === value) {
+      newVote = 0;
+      scoreDelta = -value;
+    } else {
+      newVote = value;
+      scoreDelta = vote === 0 ? value : value * 2;
+    }
+    
+    setVote(newVote);
+    if (onScoreChange) onScoreChange(scoreDelta);
+
+    try {
+      await fetch(`https://api.sicari.works/api/posts/${postId}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ vote: value }),
+      });
+    } catch (err) {
+      console.error("Failed to submit vote:", err);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-[0.5cqi]">
+      <div style={{ width: "3.3cqi" }}>
+        <Upvote 
+          onClick={() => handleVote(1)}
+          className={vote === 1 ? "scale-110 drop-shadow-[0_0_8px_green]" : "opacity-70 grayscale"} 
+        />
+      </div>
+      <div style={{ width: "3.3cqi" }}>
+        <Downvote 
+          onClick={() => handleVote(-1)}
+          className={vote === -1 ? "scale-110 drop-shadow-[0_0_8px_red]" : "opacity-70 grayscale"} 
+        />
+      </div>
+    </div>
   );
 }
 
@@ -58,98 +87,80 @@ export default function HackNiteNewspaperPoster({
   usernameTop = "Username",
   usernameBottom = "Username",
   bountyLabel = "Bounty reward",
-  bountyAmount = "$3000",
+  topBountyScore,
+  bottomBountyScore,
+  topPostId,
+  topPostUserVote,
+  bottomPostId,
+  bottomPostUserVote,
 }) {
+  const [topScore, setTopScore] = useState(Number(topBountyScore) || 0);
+  const [bottomScore, setBottomScore] = useState(Number(bottomBountyScore) || 0);
+
   return (
     <article
-      className={`relative isolate box-border h-[982px] w-[750px] max-w-none shrink-0 overflow-hidden bg-white text-black ${className}`}
+      className={`relative isolate box-border w-full h-full shrink-0 overflow-hidden bg-[#f0e8d0] text-black ${className}`}
       aria-label="Newspaper poster"
+      style={{ containerType: "inline-size" }}
     >
-      {paperImageSrc ? (
-        <img
-          src={paperImageSrc}
-          alt=""
-          className="pointer-events-none absolute left-0 top-0 h-[982px] w-[751px] max-w-none select-none object-fill"
-          width={751}
-          height={982}
-          draggable={false}
-        />
-      ) : (
-        <div
-          className="pointer-events-none absolute inset-0 bg-[#f2ede3]"
-          aria-hidden
-        />
-      )}
-
-      {/* Frame 9 instance — top rules on the plate */}
       <div
-        className="pointer-events-none absolute left-5 top-[15px] h-[5px] w-[716px] bg-black"
+        className="pointer-events-none absolute inset-0 bg-[url('/assets/Newspaper.png')] bg-cover"
         aria-hidden
       />
+
+      {/* Frame 9 instance — top rules */}
       <div
-        className="pointer-events-none absolute left-5 top-[23px] h-px w-[716px] bg-black"
-        aria-hidden
+        className="pointer-events-none absolute bg-black"
+        style={{ left: "2.66%", top: "1.52%", height: "0.5%", width: "95.5%" }}
+      />
+      <div
+        className="pointer-events-none absolute bg-black"
+        style={{ left: "2.66%", top: "2.34%", height: "0.1%", width: "95.5%" }}
       />
 
       {/* Group 22 — editorial overlay */}
-      <div className="absolute left-5 top-[35px] h-[870px] w-[728px]">
-        <div
-          className="absolute left-px top-[27px] h-[5px] w-[716px] bg-black"
-          aria-hidden
-        />
-        <div
-          className="absolute left-px top-[35px] h-px w-[716px] bg-black"
-          aria-hidden
-        />
+      <div className="absolute" style={{ left: "2.66%", top: "3.56%", height: "88.6%", width: "97%" }}>
+        <div className="absolute bg-black" style={{ left: "0", top: "3.1%", height: "0.57%", width: "98.3%" }} />
+        <div className="absolute bg-black" style={{ left: "0", top: "4.0%", height: "0.11%", width: "98.3%" }} />
 
         <p
-          className="absolute left-2.5 top-px m-0 w-24 p-0 font-['Arapey'] text-2xl leading-[1.096em] text-black"
-          style={{ width: 96, height: 39 }}
+          className="absolute m-0 p-0 font-['Arapey'] text-black"
+          style={{ left: "1.37%", top: "0", width: "13.2%", fontSize: "3.2cqi", lineHeight: "1.1" }}
         >
           {volumeLabel}
         </p>
         <p
-          className="absolute top-px m-0 p-0 font-['Arapey'] text-2xl leading-[1.096em] text-black"
-          style={{ left: 624, width: 96, height: 39 }}
+          className="absolute m-0 p-0 font-['Arapey'] text-black"
+          style={{ left: "85.7%", top: "0", width: "13.2%", fontSize: "3.2cqi", lineHeight: "1.1" }}
         >
           {pageLabel}
         </p>
 
         <h2
-          className="absolute left-2 top-[52px] m-0 max-w-none p-0 font-['IM_Fell_Double_Pica_SC'] text-[40px] font-normal leading-[1.2534] text-black"
-          style={{ width: 719, height: 50 }}
+          className="absolute m-0 max-w-none p-0 font-['IM_Fell_Double_Pica_SC'] font-normal text-black"
+          style={{ left: "0.27%", top: "5.97%", width: "98.7%", fontSize: "5.33cqi", lineHeight: "1.25" }}
         >
           {headlineTop}
         </h2>
 
-        {/* Line 37 — left spine */}
-        <div
-          className="absolute left-0 top-[102.5px] h-[405px] w-px bg-[#040404]"
-          aria-hidden
-        />
-        {/* Line 41 */}
-        <div
-          className="absolute left-0 top-[96px] h-[3.75px] w-[716.49px] bg-[#040404]"
-          aria-hidden
-        />
-        {/* Line 40 — column rule */}
-        <div
-          className="absolute left-[313px] top-[98px] h-[337px] w-px bg-[#040404]"
-          aria-hidden
-        />
+        {/* Lines */}
+        <div className="absolute bg-[#040404]" style={{ left: "0", top: "11.78%", height: "46.5%", width: "0.13%" }} />
+        <div className="absolute bg-[#040404]" style={{ left: "0", top: "11.03%", height: "0.43%", width: "98.4%" }} />
+        <div className="absolute bg-[#040404]" style={{ left: "43%", top: "11.26%", height: "38.7%", width: "0.13%" }} />
 
+        {/* Portrait */}
         {portraitSrc ? (
           <img
             src={portraitSrc}
             alt=""
-            className="absolute left-2.5 top-[114px] box-border h-[295px] w-[295px] border border-black object-cover select-none"
-            width={295}
-            height={295}
+            className="absolute box-border border-[0.15cqi] border-black object-cover select-none"
+            style={{ left: "1.37%", top: "13.1%", width: "40.5%", height: "34%" }}
             draggable={false}
           />
         ) : (
           <div
-            className="absolute left-2.5 top-[114px] box-border flex h-[295px] w-[295px] items-center justify-center border border-black bg-neutral-200/80 text-sm text-neutral-600"
+            className="absolute box-border flex items-center justify-center border-[0.1cqi] border-black bg-neutral-200/80 text-neutral-600"
+            style={{ left: "1.37%", top: "13.1%", width: "40.5%", height: "34%", fontSize: "1.8cqi" }}
             aria-hidden
           >
             Portrait
@@ -157,150 +168,111 @@ export default function HackNiteNewspaperPoster({
         )}
 
         <p
-          className="absolute left-[320px] top-[104px] m-0 max-w-none whitespace-pre-wrap p-0 font-['Fahkwang'] text-[20px] font-normal leading-[1.35] text-black"
-          style={{ width: 376, height: 289 }}
+          className="absolute m-0 max-w-none whitespace-pre-wrap p-0 font-['Fahkwang'] font-normal text-black"
+          style={{ left: "44%", top: "11.95%", width: "51.6%", height: "33.2%", fontSize: "2.6cqi", lineHeight: "1.35" }}
         >
           {bodyColumn}
         </p>
 
-        {/* Line 42 */}
-        <div
-          className="absolute left-0 top-[435px] h-px w-[313px] bg-black"
-          aria-hidden
-        />
+        <div className="absolute bg-black" style={{ left: "0", top: "50%", height: "0.11%", width: "43%" }} />
 
-        {/* Username + rule — Group 14 */}
-        <div
-          className="absolute text-[#010202]"
-          style={{ left: 463, top: 460, width: 257, height: 27 }}
-        >
-          <div
-            className="absolute left-0 top-5 h-1 w-[39px] bg-[#130802]"
-            aria-hidden
-          />
+        {/* Username + rule */}
+        <div className="absolute text-[#010202]" style={{ left: "63.6%", top: "52.8%", width: "35%", height: "3.1%" }}>
+          <div className="absolute bg-[#130802]" style={{ left: "0", top: "74%", height: "14%", width: "15%" }} />
           <p
-            className="absolute m-0 p-0 font-['Hermeneus_One'] text-[42px] font-normal leading-[0.643em]"
-            style={{ left: 55, top: 0, width: 202, height: 27 }}
+            className="absolute m-0 p-0 font-['Hermeneus_One'] font-normal"
+            style={{ left: "21.4%", top: "0", width: "78%", fontSize: "5.6cqi", lineHeight: "0.64" }}
           >
             {usernameTop}
           </p>
         </div>
 
         <p
-          className="absolute left-[11px] top-[468px] m-0 p-0 font-['Koulen'] text-[25px] font-normal leading-[1.08] text-[#050200]"
-          style={{ width: 149, height: 30 }}
+          className="absolute m-0 p-0 font-['Koulen'] font-normal text-[#050200]"
+          style={{ left: "1.5%", top: "53.8%", width: "20.4%", fontSize: "3.3cqi", lineHeight: "1.08" }}
         >
           {bountyLabel}
         </p>
 
         <div
-          className="absolute box-border border-2 border-black bg-transparent"
-          style={{ left: 164, top: 462, width: 125, height: 37 }}
+          className="absolute box-border border-[0.25cqi] border-black bg-transparent flex items-center justify-center"
+          style={{ left: "22.5%", top: "53.1%", width: "17%", height: "4.2%" }}
         >
           <p
-            className="absolute m-0 p-0 font-['Fredericka_the_Great'] text-[25px] font-normal leading-[1.08] text-black"
-            style={{ left: 6, top: 5, width: 76, height: 26 }}
+            className="m-0 p-0 font-['Fredericka_the_Great'] font-normal text-black"
+            style={{ fontSize: "3.3cqi", lineHeight: "1.08" }}
           >
-            {bountyAmount}
+            {topBountyScore !== undefined ? `$${topScore}` : "Classified"}
           </p>
         </div>
 
-        <div
-          className="pointer-events-none absolute text-black"
-          style={{ left: 300, top: 461 }}
-        >
-          <QuoteLeft />
-        </div>
-        <div
-          className="pointer-events-none absolute text-black"
-          style={{ left: 335.5, top: 461 }}
-        >
-          <QuoteRight />
+        <div className="absolute" style={{ left: "41.2%", top: "53%" }}>
+          <VoteGroup 
+            postId={topPostId} 
+            initialVote={topPostUserVote} 
+            onScoreChange={(delta) => setTopScore(prev => prev + delta)}
+          />
         </div>
 
-        {/* Lower masthead / section break */}
-        <div
-          className="absolute left-0 top-[507px] h-px w-[712px] bg-[#040404]"
-          aria-hidden
-        />
+        {/* Lower masthead */}
+        <div className="absolute bg-[#040404]" style={{ left: "0", top: "58.2%", height: "0.11%", width: "97.8%" }} />
 
         <h2
-          className="absolute left-2 top-[512px] m-0 max-w-none p-0 font-['IM_Fell_Double_Pica_SC'] text-[40px] font-normal leading-[1.2534] text-black"
-          style={{ width: 719, height: 50 }}
+          className="absolute m-0 max-w-none p-0 font-['IM_Fell_Double_Pica_SC'] font-normal text-black"
+          style={{ left: "0.27%", top: "58.8%", width: "98.7%", fontSize: "5.33cqi", lineHeight: "1.25" }}
         >
           {headlineBottom}
         </h2>
 
-        <div
-          className="absolute left-[2.98px] top-[560.38px] h-px w-[709.03px] bg-[#040404]"
-          aria-hidden
-        />
-
-        <div
-          className="absolute left-[1.5px] top-[510px] h-[354.5px] w-px bg-[#040404]"
-          aria-hidden
-        />
+        <div className="absolute bg-[#040404]" style={{ left: "0.4%", top: "64.4%", height: "0.11%", width: "97.4%" }} />
+        <div className="absolute bg-[#040404]" style={{ left: "0.2%", top: "58.6%", height: "40.7%", width: "0.13%" }} />
 
         <p
-          className="absolute left-[13px] top-[581px] m-0 max-w-none whitespace-pre-wrap p-0 font-['Fahkwang'] text-[20px] font-normal leading-[1.35] text-black"
-          style={{ width: 701, height: 289 }}
+          className="absolute m-0 max-w-none whitespace-pre-wrap p-0 font-['Fahkwang'] font-normal text-black"
+          style={{ left: "1.7%", top: "66.7%", width: "96.3%", height: "33.2%", fontSize: "2.6cqi", lineHeight: "1.35" }}
         >
           {bodyFullWidth}
         </p>
 
         {/* Group 18 */}
-        <div
-          className="absolute text-[#010202]"
-          style={{ left: 463, top: 800, width: 257, height: 27 }}
-        >
-          <div
-            className="absolute left-0 top-5 h-1 w-[39px] bg-[#130802]"
-            aria-hidden
-          />
+        <div className="absolute text-[#010202]" style={{ left: "63.6%", top: "91.9%", width: "35%", height: "3.1%" }}>
+          <div className="absolute bg-[#130802]" style={{ left: "0", top: "74%", height: "14%", width: "15%" }} />
           <p
-            className="absolute m-0 p-0 font-['Hermeneus_One'] text-[42px] font-normal leading-[0.643em]"
-            style={{ left: 55, top: 0, width: 202, height: 27 }}
+            className="absolute m-0 p-0 font-['Hermeneus_One'] font-normal"
+            style={{ left: "21.4%", top: "0", width: "78%", fontSize: "5.6cqi", lineHeight: "0.64" }}
           >
             {usernameBottom}
           </p>
         </div>
 
         <p
-          className="absolute left-[11px] top-[798px] m-0 p-0 font-['Koulen'] text-[25px] font-normal leading-[1.08] text-[#050200]"
-          style={{ width: 149, height: 30 }}
+          className="absolute m-0 p-0 font-['Koulen'] font-normal text-[#050200]"
+          style={{ left: "1.5%", top: "91.7%", width: "20.4%", fontSize: "3.3cqi", lineHeight: "1.08" }}
         >
           {bountyLabel}
         </p>
 
         <div
-          className="absolute box-border border-2 border-black bg-transparent"
-          style={{ left: 164, top: 791, width: 125, height: 37 }}
+          className="absolute box-border border-[0.25cqi] border-black bg-transparent flex items-center justify-center"
+          style={{ left: "22.5%", top: "90.9%", width: "17%", height: "4.2%" }}
         >
           <p
-            className="absolute m-0 p-0 font-['Fredericka_the_Great'] text-[25px] font-normal leading-[1.08] text-black"
-            style={{ left: 6, top: 5, width: 76, height: 26 }}
+            className="m-0 p-0 font-['Fredericka_the_Great'] font-normal text-black"
+            style={{ fontSize: "3.3cqi", lineHeight: "1.08" }}
           >
-            {bountyAmount}
+            {bottomBountyScore !== undefined ? `$${bottomScore}` : "Classified"}
           </p>
         </div>
 
-        <div
-          className="pointer-events-none absolute text-black"
-          style={{ left: 300, top: 790 }}
-        >
-          <QuoteLeft />
-        </div>
-        <div
-          className="pointer-events-none absolute text-black"
-          style={{ left: 335.5, top: 790 }}
-        >
-          <QuoteRight />
+        <div className="absolute" style={{ left: "41.2%", top: "91.5%" }}>
+          <VoteGroup 
+            postId={bottomPostId} 
+            initialVote={bottomPostUserVote} 
+            onScoreChange={(delta) => setBottomScore(prev => prev + delta)}
+          />
         </div>
 
-        <div
-          className="absolute left-[3px] top-[864.5px] h-px w-[711px] bg-[#040404]"
-          aria-hidden
-        />
+        <div className="absolute bg-[#040404]" style={{ left: "0.4%", top: "99.3%", height: "0.11%", width: "97.6%" }} />
       </div>
     </article>
   );

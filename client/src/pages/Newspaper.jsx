@@ -7,15 +7,24 @@ import EvidenceGun from "../components/EvidenceGun.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import WantedPoster from "../components/WantedPoster.jsx";
 import { useNavigate } from "react-router-dom";
+import HackNiteNewspaperPoster from "../components/HackNiteNewspaperPoster";
+
+// ==========================================
+// CONFIGURATION: FLIPBOOK ASPECT RATIO
+// Modify these exact values to change the dimensions of the newspaper pages natively.
+// The aspect ratio will always strictly conform to these regardless of monitor size!
+const PAGE_HEIGHT_VH = 90;
+const PAGE_ASPECT_RATIO = 0.75; // Width is 65% of the Height
+// ==========================================
 
 // 1. MOVED OUTSIDE: This prevents React from destroying the pages on every click!
 const Page = React.forwardRef((props, ref) => {
   return props.front === false ? (
-    <div className="demoPage bg-contain select-none z-3" ref={ref}>
-      <SinglePage />
+    <div className="demoPage bg-contain select-none z-3 overflow-hidden" ref={ref}>
+      <SinglePage posts={props.posts} pageNum={props.pageNum} />
     </div>
   ) : (
-    <div className="demoPage bg-contain select-none z-3" ref={ref}>
+    <div className="demoPage bg-contain select-none z-3 overflow-hidden" ref={ref}>
       <FrontPage />
     </div>
   );
@@ -24,26 +33,58 @@ const Page = React.forwardRef((props, ref) => {
 export default function Newspaper() {
   const navigate = useNavigate();
   const [dimensions, setDimensions] = useState({
-    width: window.innerWidth * 0.35,
-    height: window.innerHeight * 0.85,
+    width: (window.innerHeight * (PAGE_HEIGHT_VH / 100)) * PAGE_ASPECT_RATIO,
+    height: window.innerHeight * (PAGE_HEIGHT_VH / 100),
   });
 
   const [isOpened, setIsOpened] = useState(false);
   const bookRef = useRef(null);
 
+  const [postChunks, setPostChunks] = useState([]);
+
   useEffect(() => {
     const handleResize = () => {
+      // Strict aspect ratio enforcement 
       setDimensions({
-        width:
-          window.innerWidth > 768
-            ? window.innerWidth * 0.35
-            : window.innerWidth * 0.8,
-        height: window.innerHeight * 0.85,
+        width: (window.innerHeight * (PAGE_HEIGHT_VH / 100)) * PAGE_ASPECT_RATIO,
+        height: window.innerHeight * (PAGE_HEIGHT_VH / 100),
       });
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    fetch("https://api.sicari.works/api/posts", {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const posts = Array.isArray(data) ? data : data.posts || data.data || [];
+        const chunks = [];
+        for (let i = 0; i < posts.length; i += 2) {
+          chunks.push(posts.slice(i, i + 2));
+        }
+        setPostChunks(chunks);
+      })
+      .catch((err) => console.error("Error fetching posts:", err));
+  }, []);
+
+  const displayPages = postChunks.length > 0 ? postChunks : Array(6).fill([]);
+  const isOddLength = displayPages.length % 2 !== 0;
+
+  const pagesArray = [
+    <Page key="front" front={true} />,
+    ...displayPages.map((chunk, idx) => (
+      <Page key={`flip-page-${idx}`} front={false} posts={chunk} pageNum={idx + 1} />
+    ))
+  ];
+
+  if (isOddLength) {
+    pagesArray.push(
+      <Page key="odd-pad" front={false} posts={[]} pageNum={displayPages.length + 1} />
+    );
+  }
 
   return (
     <CinematicPage>
@@ -53,24 +94,20 @@ export default function Newspaper() {
         {/* 1. DARK OVERLAY */}
         <div
           onClick={() => setIsOpened(false)}
-          className={` fixed inset-0 bg-black/70 transition-all duration-700 z-20 ${
-            isOpened
+          className={` fixed inset-0 bg-black/70 transition-all duration-700 z-20 ${isOpened
               ? "opacity-100 backdrop-blur-md pointer-events-auto"
               : "opacity-0 pointer-events-none backdrop-blur-none"
-          }`}
+            }`}
         />
 
         {/* 2. STATIC IMAGE (ON TABLE) */}
         <div
           onClick={() => setIsOpened(true)}
-          className={`absolute transition-all duration-700 z-20 cursor-pointer shadow-2xl ${
-            isOpened
+          className={`absolute transition-all duration-700 z-20 cursor-pointer shadow-2xl ${isOpened
               ? "opacity-0 scale-150 blur-xl pointer-events-none"
               : "opacity-100 scale-100 "
-          }`}
+            }`}
           style={{
-            // Replaced 200px with 15vw (15% of screen width)
-            // Replaced -100px with -10vh (10% of screen height)
             transform: !isOpened
               ? "rotate(45deg) scale(0.5) translate(15vw, -10vh)"
               : "none",
@@ -87,37 +124,23 @@ export default function Newspaper() {
         {/* 3. THE ACTUAL BOOK */}
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`relative transition-all duration-700 z-30 ${
-            isOpened
+          className={`relative transition-all duration-700 z-30 ${isOpened
               ? "opacity-100 scale-100 blur-0"
               : "opacity-0 rotate-45 scale-75 blur-lg pointer-events-none"
-          }`}
+            }`}
         >
           <HTMLFlipBook
             width={dimensions.width}
             height={dimensions.height}
-            showCover={true}
+            showCover={false}
             usePortrait={false}
             ref={bookRef}
-            className="shadow-2xl"
+            className="shadow-2xl bg-white"
             startZIndex={30}
             maxShadowOpacity={0.3}
             disableFlipByClick={!isOpened}
           >
-            <Page front={true} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
-            <Page front={false} />
+            {pagesArray}
           </HTMLFlipBook>
         </div>
 
@@ -147,58 +170,39 @@ export default function Newspaper() {
   );
 }
 
-function SinglePage() {
+function SinglePage({ posts = [], pageNum = 1 }) {
+  const topPost = posts[0] || {};
+  const bottomPost = posts[1] || {};
+
   return (
-    <div className="page p-3 bg-[url('/assets/Newspaper.png')] grayscale bg-cover h-[85vh] w-[35vw]">
-      <div className="newsHeader h-[5%] p-0 m-0 border"></div>
-      <div className="newsContent flex gap-6 mt-2">
-        <div className="col1">
-          <h2 className="newsHeading text-2xl text-center">Falana 1</h2>
-          <img
-            src="/assets/test.png"
-            className="newsImage max-w-[55%] float-left mr-4"
-            alt="news"
-          />
-          <p className="newsContent text-justify">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus
-            numquam quaerat ipsa commodi earum optio quia ut, quis distinctio
-            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis
-            distinctio pariatur cumque ameterat ipsa commodi earum optio quia
-            ut, quis distinctio pariatur cumque ameterat ipsa commodi earum
-            optio quia ut, quis distinctio pariatur cumque ameterat ipsa commodi
-            earum optio quia ut, quis distinctio pariatur cumque amet vitae
-            dolore non nobis. Atque numquam nihil facere vitae quis aliquid
-            incidunt quia, voluptas sequi.
-          </p>
-        </div>
-        <div className="col2">
-          <h2 className="newsHeading text-2xl text-center">Falana 2</h2>
-          <img
-            src={"/assets/test.png"}
-            className="newsImage max-w-[55%] float-left mr-4"
-            alt="news"
-          />
-          <p className="newsContent text-justify">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus
-            numquam quaerat ipsa commodi earum optio quia ut, quis distinctio
-            pariatur cumque ameterat ipsa commodi earum optio quia ut, quis
-            distinctio pariatur cumque ameterat ipsa commodi earum optio quia
-            ut, quis distinctio pariatur cumque ameterat ipsa commodi earum
-            optio quia ut, quis distinctio pariatur cumque ameterat ipsa commodi
-            earum optio quia ut, quis distinctio pariatur cumque amet vitae
-            dolore non nobis. Atque numquam nihil facere vitae quis aliquid
-            incidunt quia, voluptas sequi.
-          </p>
-        </div>
-      </div>
+    <div className="w-full h-full p-0 overflow-hidden flex justify-center items-center bg-[#f0e8d0]">
+      <HackNiteNewspaperPoster
+        volumeLabel="Vol1 , 13"
+        pageLabel={`Page : ${pageNum}`}
+
+        topPostId={topPost._id || topPost.id}
+        topPostUserVote={topPost.userVote || topPost.vote}
+        headlineTop={topPost.title || topPost.heading || "REDACTED"}
+        bodyColumn={topPost.content || topPost.body || "No information available at this time."}
+        usernameTop={topPost.author || topPost.username || "Anonymous"}
+        topBountyScore={topPost.score}
+
+        bottomPostId={bottomPost._id || bottomPost.id}
+        bottomPostUserVote={bottomPost.userVote || bottomPost.vote}
+        headlineBottom={bottomPost.title || bottomPost.heading || "REDACTED"}
+        bodyFullWidth={bottomPost.content || bottomPost.body || "No information available at this time."}
+        usernameBottom={bottomPost.author || bottomPost.username || "Anonymous"}
+        bountyLabel="Bounty reward"
+        bottomBountyScore={bottomPost.score}
+      />
     </div>
   );
 }
 
 function FrontPage() {
   return (
-    <div className="page p-3 bg-[url('/assets/Newspaper.png')] grayscale bg-contain h-[85vh] w-[35vw] flex items-center flex-col">
-      <div className="page p-3 bg-[url('/assets/Newspaper.png')] grayscale bg-cover h-[85vh] w-[35vw] flex items-center flex-col">
+    <div className="page p-3 bg-[url('/assets/Newspaper.png')] bg-cover bg-center h-full w-full flex items-center flex-col overflow-hidden">
+      <div className="page p-3 bg-[url('/assets/Newspaper.png')] bg-cover h-full w-full flex items-center flex-col">
         <div className="w-full h-[0.3em] m-1 font-black block bg-black"></div>
         <div className="w-full h-[0.05em] mb-1 font-black block bg-black"></div>
         <img src="/assets/newsPaperName.svg" alt="" className="w-[95%] " />
@@ -219,6 +223,7 @@ function FrontPage() {
               <img
                 src="/assets/test.png"
                 className="newsImage max-w-[45%] float-left mr-4 "
+                alt="test block"
               />
               <p className="newsContent text-justify">
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus
@@ -230,12 +235,12 @@ function FrontPage() {
                 optio quia ut, quis ectus quidem pariatur recusandae odio rem?
               </p>
               <div className="advertisement w-full border-2 p-0 mt-1 flex items-center justify-center">
-                  <img src="/assets/advert.svg" alt="advertisement for front page" className=" m-0 w-[80%]" />hi
+                <img src="/assets/advert.svg" alt="advertisement for front page" className=" m-0 w-[80%]" />hi
               </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

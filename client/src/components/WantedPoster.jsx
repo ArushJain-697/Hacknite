@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 // ─── SAMPLE DATA (replace with your backend fetch) ───────────────────────────
 const defaultData = {
@@ -42,7 +42,56 @@ function RedactedBar() {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
-export default function WantedPoster({ data = defaultData }) {
+export default function WantedPoster({ data: propData }) {
+  const [data, setData] = useState(propData || defaultData);
+
+  useEffect(() => {
+    // 1. Fetch current user role
+    fetch("https://api.sicari.works/api/auth/me", { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) throw new Error("Auth check failed");
+        return res.json();
+      })
+      .then((authData) => {
+        const role =
+          authData.user?.role ||
+          authData.data?.user?.role ||
+          authData.role;
+
+        if (role === "sicario") {
+          return fetch("https://api.sicari.works/api/sicario/profile", {
+            credentials: "include",
+          });
+        } else if (role === "fixer") {
+          return fetch("https://api.sicari.works/api/fixer/profile", {
+            credentials: "include",
+          });
+        } else {
+          // If no valid role, skip fetching profile
+          return null;
+        }
+      })
+      .then((res) => {
+        if (res) return res.json();
+      })
+      .then((profileResponse) => {
+        if (profileResponse) {
+          const p =
+            profileResponse.profile ||
+            profileResponse.data ||
+            profileResponse;
+
+          setData((prev) => ({
+            ...prev,
+            ...p,
+            // ensure fallback logic for nested/array structure if needed
+            skills: p.skills || prev.skills,
+          }));
+        }
+      })
+      .catch((err) => console.error("Error fetching wanted poster data:", err));
+  }, []);
+
   const {
     clearanceLevel,
     dateJoined,
