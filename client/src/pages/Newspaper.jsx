@@ -227,13 +227,15 @@ export default function Newspaper() {
             className="pointer-events-none relative"
           />
           {!showWantedProfile && (
+            <div className="scale-250 translate-y-[-30em]">
              <InteractionMarker 
                className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
                baseScale={1.0}
                onClick={() => setShowWantedProfile(true)} 
                text="READ"
                kokila={true}
-             />
+               />
+               </div>
           )}
 
           {showWantedProfile && (

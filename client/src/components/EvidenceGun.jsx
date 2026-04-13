@@ -58,16 +58,39 @@ function GunMesh({ isZoomed, setIsZoomed, setHovered }) {
       position={tablePosition}
       rotation={tableRotation}
       scale={tableScale}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true); // Pass hover state up to parent
-        document.body.style.cursor = !isZoomed ? "pointer" : "auto";
-      }}
-      onPointerOut={() => {
-        setHovered(false);
-        document.body.style.cursor = "auto";
-      }}
     >
+      {/* The actual visible gun model (no events attached) */}
+      <primitive object={scene} pointerEvents="none" />
+
+      {/* THE HITBOX: A solid, invisible block that handles all interactions perfectly */}
+      <mesh
+        // You may need to tweak these args [width, height, depth]
+        // to perfectly encapsulate your specific gun model
+        scale={[5, 5, 2]}
+        position={[0, 0, 0]}
+        onPointerEnter={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = !isZoomed ? "pointer" : "auto";
+        }}
+        onPointerLeave={(e) => {
+          e.stopPropagation();
+          setHovered(false);
+          document.body.style.cursor = "auto";
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!isZoomed) {
+            setIsZoomed(true);
+            setHovered(false);
+            document.body.style.cursor = "auto";
+          }
+        }}
+      >
+        {/* A simple box geometry. Change visible={true} temporarily if you need to see it to resize it */}
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
       <primitive object={scene} />
 
       {isZoomed && (
@@ -136,6 +159,20 @@ export default function EvidenceGun() {
           camera={{ position: [0, 0, 5], fov: 50 }}
           onPointerMissed={() => setIsZoomed(false)}
         >
+          {!isZoomed && (
+            <Html position={[-3.8, -0.6, 0.5]} center zIndexRange={[100, 0]}>
+              <InteractionMarker
+                onClick={() => {
+                  setIsZoomed(true);
+                  setHovered(false);
+                }}
+                baseScale={1.3}
+                forceVisible={hovered}
+                text="STATS"
+              />
+            </Html>
+          )}
+
           <ambientLight intensity={0.2} />
           <spotLight
             position={[5, 8, 2]}
@@ -151,20 +188,6 @@ export default function EvidenceGun() {
             setIsZoomed={setIsZoomed}
             setHovered={setHovered}
           />
-
-          {!isZoomed && (
-            <Html position={[-3.8, -1.2, 0.5]} center zIndexRange={[100, 0]}>
-              <InteractionMarker
-                onClick={() => {
-                  setIsZoomed(true);
-                  setHovered(false);
-                }}
-                baseScale={1.0}
-                forceVisible={hovered}
-                text="STATS"
-              />
-            </Html>
-          )}
 
           <OrbitControls
             ref={controlsRef}
