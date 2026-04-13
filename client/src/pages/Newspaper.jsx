@@ -428,10 +428,9 @@ function FrontPage() {
                   alt="test block"
                 />
                 <p className="newsContent text-justify">
-                  Sin City's shadows grow longer. Three vaults cracked,
-                  two armored transports vanished, and the LVPD has nothing but cold coffee and colder
-                  leads. Hired hands move like ghosts through the neon haze, no names, no faces,
-                  no mercy. The corrupt sleep soundly. Everyone else watches the door.
+                  The shadows in Sin City are stretching, long and jagged. Three vaults cracked wide, two armored transports vanished into the desert heat, and the LVPD is left with nothing but cold coffee and colder leads.
+
+Through the electric haze of the Strip, hired hands move like ghosts—no names, no faces, no mercy. While the corrupt sleep soundly in their high-rise penthouses, the rest of the city stays awake, eyes fixed on the door. Lorem ipsum dolor sit amet, consectetur adipisicing elit.
                 </p>
               </div>
               <div className="advertisement w-full border-2 p-0 mt-1 flex items-center justify-center">
