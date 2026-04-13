@@ -4,11 +4,17 @@ import HackNiteCard from "../components/HackNiteCard";
 const API_BASE = "https://api.sicari.works";
 
 function applicationToCardProps(application) {
+  const operationName =
+    application.operation_name ?? application.section_a?.operation_name;
+  const target = application.target ?? application.section_a?.target;
+  const status =
+    application.status ?? application.heist_status ?? application.stage;
+
   return {
-    title: application.operation_name ?? "Untitled",
+    title: operationName ?? "Untitled",
     hashtagLines: [
-      application.target
-        ? `# ${application.target}`
+      target
+        ? `# ${target}`
         : "# —",
 
       application.heist_status
@@ -19,8 +25,8 @@ function applicationToCardProps(application) {
           }`
         : "# —",
 
-      application.status
-        ? `# ${application.status}`
+      status
+        ? `# ${status}`
         : "# —",
     ],
   };
@@ -53,7 +59,7 @@ const MyHeists = () => {
 
         const applicationsList = Array.isArray(response)
           ? response
-          : response.applications ?? response.data ?? [];
+          : response.heists ?? response.applications ?? response.data ?? [];
 
         setApplications(Array.isArray(applicationsList) ? applicationsList : []);
       })
@@ -92,6 +98,7 @@ const MyHeists = () => {
         <div className="flex flex-wrap justify-center gap-x-12 gap-y-16">
           {applications.map((application) => {
             const id =
+              application.id ??
               application.application_id ??
               application.heist_id ??
               `${application.operation_name}-${application.created_at}`;
