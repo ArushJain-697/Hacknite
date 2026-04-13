@@ -27,7 +27,7 @@ const HorizontalGallery = () => {
     fetch("https://api.sicari.works/api/auth/me", { credentials: "include" })
       .then((res) => res.json())
       .then((authData) => {
-        const userRole = authData?.user?.role || "sicario";
+        const userRole = String(authData?.user?.role || "sicario").toLowerCase();
         setRole(userRole);
 
         const url =

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import HackNiteCard from "../components/HackNiteCard";
 
-const APPLICATIONS_URL = "https://api.sicari.works/api/sicario/applications";
+const API_BASE = "https://api.sicari.works";
 
 function applicationToCardProps(application) {
   return {
@@ -33,7 +33,18 @@ const MyHeists = () => {
   useEffect(() => {
     let cancelled = false;
 
-    fetch(APPLICATIONS_URL, { credentials: "include" })
+    fetch(`${API_BASE}/api/auth/me`, { credentials: "include" })
+      .then((res) =>
+        res.ok ? res.json() : Promise.reject(new Error("Auth failed"))
+      )
+      .then((auth) => {
+        const role = String(auth?.user?.role || "sicario").toLowerCase();
+        const endpoint =
+          role === "fixer"
+            ? `${API_BASE}/api/fixer/heists`
+            : `${API_BASE}/api/sicario/heists`;
+        return fetch(endpoint, { credentials: "include" });
+      })
       .then((res) =>
         res.ok ? res.json() : Promise.reject(new Error(String(res.status)))
       )
