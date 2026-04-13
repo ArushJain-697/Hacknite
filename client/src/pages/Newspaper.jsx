@@ -318,7 +318,7 @@ export default function Newspaper() {
           draggable={false}
           className="bullets absolute left-70 z-19 bottom-10 rotate-160 max-w-25 p-1 box-content "
         />
-        {role === "sicario" && (
+        
           <div 
              className={`group absolute left-[62vw] top-[50vh] rotate-310 z-20 w-50 ${isOpened ? "opacity-0 pointer-events-none blur-xl" : "opacity-100"}`}
           >
@@ -336,7 +336,6 @@ export default function Newspaper() {
                text="POST"
             />
           </div>
-        )}
         <EvidenceGun />
       </div>
     </CinematicPage>

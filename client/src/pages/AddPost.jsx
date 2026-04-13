@@ -72,6 +72,31 @@ const playSound = (type) => {
 const CARRIAGE_STEP_PX = 5.2;
 const MAX_CARRIAGE_PX = 400;
 
+const MAX_CONTENT_WORDS = 40;
+
+function countWords(text) {
+  const t = String(text || "").trim();
+  if (!t) return 0;
+  return t.split(/\s+/).filter(Boolean).length;
+}
+
+/** Keeps at most `maxWords` whitespace-separated words; preserves leading text up to the start of word maxWords+1. */
+function truncateToWordCount(text, maxWords) {
+  if (maxWords <= 0) return "";
+  let words = 0;
+  let i = 0;
+  const len = text.length;
+  while (i < len) {
+    while (i < len && /\s/.test(text[i])) i++;
+    if (i >= len) return text;
+    const wordStart = i;
+    while (i < len && !/\s/.test(text[i])) i++;
+    words += 1;
+    if (words > maxWords) return text.slice(0, wordStart);
+  }
+  return text;
+}
+
 export default function AddPost() {
   const navigate = useNavigate();
   const [dossierData, setDossierData] = useState({
@@ -196,7 +221,11 @@ export default function AddPost() {
       setCarriageOffsetPx(0);
       if (isMultiline(currentFieldId)) {
         lastKeyEnterRef.current = true;
-        updateData(currentFieldId, val + '\n');
+        const next =
+          currentFieldId === "content"
+            ? truncateToWordCount(val + "\n", MAX_CONTENT_WORDS)
+            : val + "\n";
+        updateData(currentFieldId, next);
       } else {
         const list = getOrderedFieldList();
         const nextIndex = Math.min(list.indexOf(currentFieldId) + 1, list.length - 1);
@@ -216,9 +245,16 @@ export default function AddPost() {
   };
 
   const handlePublish = async () => {
-    if (!dossierData.content) {
-       alert("Content is required to publish.");
-       return;
+    const wc = countWords(dossierData.content);
+    if (wc < 1) {
+      alert("Content is required to publish.");
+      return;
+    }
+    if (wc > MAX_CONTENT_WORDS) {
+      alert(
+        `Dispatch body is limited to ${MAX_CONTENT_WORDS} words (you have ${wc}).`,
+      );
+      return;
     }
     setLockState('exiting');
     
@@ -339,7 +375,13 @@ export default function AddPost() {
             <br />
             <Field id="title" label="1. HEADLINE (OPTIONAL):" block />
             <Field id="content" label="2. DISPATCH BODY (REQUIRED):" block />
-            
+            <div
+              className="td-field-label mt-1 mb-2"
+              style={{ fontSize: "0.85em", opacity: 0.85 }}
+            >
+              {countWords(dossierData.content)} / {MAX_CONTENT_WORDS} words max
+            </div>
+
             <div className="td-photo mt-[50px] inline-block" onClick={() => document.getElementById('photoUpload').click()}>
               <input id="photoUpload" type="file" style={{ display:'none' }} accept="image/*" onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -360,7 +402,11 @@ export default function AddPost() {
       <div className="td-button-container flex justify-center items-center w-full py-4 z-[100] bg-transparent pointer-events-auto shrink-0">
         <button 
           className="td-stamp-btn pointer-events-auto shadow-xl" 
-          disabled={!dossierData.content || lockState !== 'idle'}
+          disabled={
+            countWords(dossierData.content) < 1 ||
+            countWords(dossierData.content) > MAX_CONTENT_WORDS ||
+            lockState !== 'idle'
+          }
           onClick={handlePublish}
         >
           📰 PUBLISH NEWSPAPER POST
@@ -371,7 +417,10 @@ export default function AddPost() {
         ref={hiddenInputRef}
         value={getFieldValue(currentFieldId)}
         onChange={(e) => {
-          const newVal = e.target.value;
+          let newVal = e.target.value;
+          if (currentFieldId === "content") {
+            newVal = truncateToWordCount(newVal, MAX_CONTENT_WORDS);
+          }
           updateData(currentFieldId, newVal);
           const lines = newVal.split('\n');
           const lastLineLength = lines[lines.length - 1].length;
