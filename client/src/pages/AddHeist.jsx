@@ -96,12 +96,27 @@ const crewBlock = (slot) => [
 ];
 
 const SECTION_A_FIELDS = [
-  { id: "sa_operation_name", label: "OPERATION NAME:" },
+  { id: "sa_operation_name", label: "OPERATION NAME (MAX 22 WORDS):" },
   { id: "sa_place", label: "PLACE:" },
   { id: "sa_target", label: "TARGET:" },
   { id: "sa_introduction", label: "INTRODUCTION:" },
   { id: "sa_quote", label: "QUOTE:" },
 ];
+
+const OPERATION_NAME_MAX_WORDS = 22;
+
+function countWords(text) {
+  return String(text || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+function clampToWordLimit(text, maxWords) {
+  const words = String(text || "").trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return String(text || "");
+  return words.slice(0, maxWords).join(" ");
+}
 
 const SECTION_B_FIELDS = [
   { id: "sb_phase1_name", label: "PHASE 1 NAME:" },
@@ -314,6 +329,9 @@ function validateBeforeSubmit(data) {
   const op = (data.sa_operation_name || "").trim();
   if (op.length < 3) {
     return "Operation name must be at least 3 characters.";
+  }
+  if (countWords(op) > OPERATION_NAME_MAX_WORDS) {
+    return `Operation name must be ${OPERATION_NAME_MAX_WORDS} words or fewer.`;
   }
   const intro = (data.sa_introduction || "").trim();
   if (intro.length < 10) {
@@ -800,7 +818,11 @@ export default function AddHeist() {
           ref={hiddenInputRef}
           value={getFieldValue(currentFieldId)}
           onChange={(e) => {
-            const newVal = e.target.value;
+            const rawVal = e.target.value;
+            const newVal =
+              currentFieldId === "sa_operation_name"
+                ? clampToWordLimit(rawVal, OPERATION_NAME_MAX_WORDS)
+                : rawVal;
             updateData(currentFieldId, newVal);
             const lines = newVal.split("\n");
             const lastLineLength = lines[lines.length - 1].length;
