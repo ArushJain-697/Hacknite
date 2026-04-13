@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Mousewheel } from "swiper/modules";
@@ -8,6 +8,7 @@ import "swiper/css/free-mode";
 import { useNavigate } from "react-router-dom";
 
 import HackNiteCard from "../components/HackNiteCard";
+import ApprovalInterface from "../components/ApprovalInterface";
 import CinematicPage from "../components/CinematicPage";
 import "../styles/HeistsWall.css";
 
@@ -21,6 +22,12 @@ const HorizontalGallery = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [heists, setHeists] = useState([]);
   const [role, setRole] = useState("sicario");
+  const [applicants, setApplicants] = useState([]);
+  const [applicantsLoading, setApplicantsLoading] = useState(false);
+  const [applicantsError, setApplicantsError] = useState(null);
+  const [showApprovalInterface, setShowApprovalInterface] = useState(false);
+  const [selectedHeistForApplicants, setSelectedHeistForApplicants] =
+    useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,6 +50,67 @@ const HorizontalGallery = () => {
         setHeists(arr);
       })
       .catch((err) => console.error("Error fetching heists data:", err));
+  }, []);
+
+  const fetchApplicantsForHeist = useCallback(async (heist) => {
+    if (!heist) return;
+    const hid = heist.id ?? heist.heist_id;
+    if (hid == null) {
+      setApplicantsError("Invalid heist id.");
+      return;
+    }
+
+    setSelectedHeistForApplicants(heist);
+    setApplicants([]);
+    setApplicantsError(null);
+    setApplicantsLoading(true);
+    setShowApprovalInterface(true);
+
+    try {
+      const res = await fetch(
+        `https://api.sicari.works/api/fixer/heist/${hid}/applicants`,
+        { credentials: "include" },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.message || "Could not load applicants.");
+      }
+      const list = Array.isArray(data.applicants) ? data.applicants : [];
+      const pendingOnly = list.filter((a) => a.status === "pending");
+      const mapped = pendingOnly.map((a) => ({
+        ...a,
+        id: a.application_id,
+        role: a.title || "Sicario",
+        skill: a.fit_score ?? "N/A",
+        successRate: a.fit_score ?? 0,
+        wantedBy: Array.isArray(a.skills) ? a.skills : [],
+        bio: a.bio || "",
+      }));
+      setApplicants(mapped);
+    } catch (e) {
+      setApplicantsError(e.message || "Could not load applicants.");
+    } finally {
+      setApplicantsLoading(false);
+    }
+  }, []);
+
+  const handleApplicantDecision = useCallback(async (applicationId, status) => {
+    const res = await fetch(
+      `https://api.sicari.works/api/fixer/application/${applicationId}`,
+      {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || "Failed to update application.");
+    }
+    setApplicants((prev) =>
+      prev.filter((a) => a.application_id !== applicationId),
+    );
   }, []);
 
   // const infiniteHeists =
@@ -232,7 +300,11 @@ const HorizontalGallery = () => {
                   onClick={(e) => {
                     e.stopPropagation();
                     const hid = selectedItem?.raw?.id;
-                    if (hid != null) {
+                    if (hid == null) return;
+                    if (role === "fixer") {
+                      fetchApplicantsForHeist(selectedItem.raw);
+                      setSelectedItem(null);
+                    } else {
                       navigate(`/heist/${hid}`, {
                         state: { heist: selectedItem.raw },
                       });
@@ -251,6 +323,48 @@ const HorizontalGallery = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {showApprovalInterface && role === "fixer" && (
+          <div className="fixed inset-0 z-[300] bg-black/85 p-4 overflow-y-auto">
+            <div className="mx-auto flex max-w-6xl flex-col items-center gap-4">
+              <div className="flex w-full max-w-4xl items-center justify-between rounded bg-[#1d1a16] px-4 py-3 border border-stone-700">
+                <div>
+                  <p className="text-lg font-semibold">
+                    {selectedHeistForApplicants?.section_a?.operation_name ||
+                      "Heist applicants"}
+                  </p>
+                  <p className="text-sm text-stone-400">
+                    Review and accept or reject applicants
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="bg-stone-900 px-4 py-2 border border-stone-500 hover:bg-stone-800"
+                  onClick={() => setShowApprovalInterface(false)}
+                >
+                  Close
+                </button>
+              </div>
+
+              {applicantsLoading && (
+                <div className="text-stone-300">Loading applicants...</div>
+              )}
+              {applicantsError && (
+                <div className="text-red-300">{applicantsError}</div>
+              )}
+              {!applicantsLoading && !applicantsError && applicants.length === 0 && (
+                <div className="text-stone-400">No pending applicants.</div>
+              )}
+              {!applicantsLoading && !applicantsError && applicants.length > 0 && (
+                <ApprovalInterface
+                  initialProfiles={applicants}
+                  onDecision={handleApplicantDecision}
+                  onClose={() => setShowApprovalInterface(false)}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </CinematicPage>
   );

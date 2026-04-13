@@ -134,7 +134,8 @@ const MyHeists = () => {
           throw new Error(data?.message || "Could not load applicants.");
         }
         const list = Array.isArray(data.applicants) ? data.applicants : [];
-        const mapped = list.map((a) => ({
+        const pendingOnly = list.filter((a) => a.status === "pending");
+        const mapped = pendingOnly.map((a) => ({
           ...a,
           id: a.application_id,
           role: a.title || "Sicario",
@@ -167,6 +168,9 @@ const MyHeists = () => {
     if (!res.ok) {
       throw new Error(data?.message || "Failed to update application.");
     }
+    setApplicants((prev) =>
+      prev.filter((a) => a.application_id !== applicationId),
+    );
   }, []);
 
   return (
@@ -248,7 +252,7 @@ const MyHeists = () => {
               <div className="text-red-300">{applicantsError}</div>
             )}
             {!applicantsLoading && !applicantsError && applicants.length === 0 && (
-              <div className="text-stone-400">No applicants yet.</div>
+              <div className="text-stone-400">No pending applicants.</div>
             )}
             {!applicantsLoading && !applicantsError && applicants.length > 0 && (
               <ApprovalInterface
