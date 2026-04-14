@@ -72,12 +72,19 @@ const playSound = (type) => {
 const CARRIAGE_STEP_PX = 5.2;
 const MAX_CARRIAGE_PX = 400;
 
+const MAX_TITLE_CHARS = 35;
 const MAX_CONTENT_WORDS = 40;
 
 function countWords(text) {
   const t = String(text || "").trim();
   if (!t) return 0;
   return t.split(/\s+/).filter(Boolean).length;
+}
+
+function clampToCharCount(text, maxChars) {
+  const s = String(text ?? "").replace(/\n+/g, " ");
+  if (maxChars <= 0) return "";
+  return s.length > maxChars ? s.slice(0, maxChars) : s;
 }
 
 /** Keeps at most `maxWords` whitespace-separated words; preserves leading text up to the start of word maxWords+1. */
@@ -374,6 +381,12 @@ export default function AddPost() {
           <div className="td-section">
             <br />
             <Field id="title" label="1. HEADLINE (OPTIONAL):" block />
+            <div
+              className="td-field-label mt-1 mb-2"
+              style={{ fontSize: "0.85em", opacity: 0.85 }}
+            >
+              {String(dossierData.title || "").length} / {MAX_TITLE_CHARS} chars max
+            </div>
             <Field id="content" label="2. DISPATCH BODY (REQUIRED):" block />
             <div
               className="td-field-label mt-1 mb-2"
@@ -418,6 +431,9 @@ export default function AddPost() {
         value={getFieldValue(currentFieldId)}
         onChange={(e) => {
           let newVal = e.target.value;
+          if (currentFieldId === "title") {
+            newVal = clampToCharCount(newVal, MAX_TITLE_CHARS);
+          }
           if (currentFieldId === "content") {
             newVal = truncateToWordCount(newVal, MAX_CONTENT_WORDS);
           }
