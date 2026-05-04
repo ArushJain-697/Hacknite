@@ -6,7 +6,7 @@
 > Built with a zero-trust approach, the architecture implements HttpOnly JWT authentication, strict Zod schema validation for all incoming payloads, and parameterized MySQL queries to eliminate injection vulnerabilities, all deployed on Railway behind Cloudflare's Layer 7 protection.
 
 Live at **[sicari.works](https://sicari.works)** and API at **[api.sicari.works](https://api.sicari.works)**
-
+Demo - https://www.youtube.com/watch?v=u5YXOgA7ayc
 <p>
   <img src="https://img.shields.io/badge/REACT-4A739C?style=for-the-badge&logo=react&logoColor=white" height="32" alt="React">
   <img src="https://img.shields.io/badge/VITE-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" height="32" alt="Vite">
