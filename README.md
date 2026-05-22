@@ -208,7 +208,7 @@ Tables are auto-created on first run via initDatabase(). No migration scripts ne
 *Built at IIIT Bangalore — Hacknite.*
 
 - Ayaan Sharma (BC2025017)
-- Arush Kumar Jain (BC2025013)
+- 
 - Yug Porwal (BC2025121)
 
 ---
